@@ -1,0 +1,18 @@
+# Generated sources
+src/font.c
+
+# Compiled C objects
+**.a
+**.o
+**.so
+
+# Scons logs
+**.log
+
+# Compiled Python objects
+**.pyc
+**.pyo
+
+# Debug files
+core.*
+vgcore.*
