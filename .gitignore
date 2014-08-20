@@ -1,17 +1,28 @@
 # Generated sources
 src/font.c
 
-# Compiled C objects
-**.a
-**.o
-**.so
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects
+*.dll
+*.so
+*.so.*
+*.dylib
 
 # Scons logs
-**.log
+*.log
 
 # Compiled Python objects
-**.pyc
-**.pyo
+*.pyc
+*.pyo
 
 # Debug files
 core.*
