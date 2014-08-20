@@ -4,11 +4,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "list.h"
+#include "font.h"
 #include "sauce.h"
+#include "palette.h"
 
 #define TILE_DEFAULT_FG     0x07
 #define TILE_DEFAULT_BG     0x00
 #define TILE_DEFAULT_CH     0x20
+#define TILE_DEFAULT_ATTRIB 0x00
 
 #define ATTRIB_DEFAULT      0U
 #define ATTRIB_BOLD         (1U << 1)
@@ -26,32 +29,36 @@
 #define ATTRIB_UNSET(x, attrib) do { x &= ~attrib; } while(0)
 
 typedef struct tile_s {
-    unsigned char fg;       /* Foreground color palette index */
-    unsigned char bg;       /* Background color palette index */
-    unsigned char ch;
-    struct tile_s *next;
+    uint8_t         fg;       /* Foreground color palette index */
+    uint8_t         bg;       /* Background color palette index */
+    uint8_t         ch;
+    uint64_t        attrib;
+    struct tile_s   *next;
 } tile;
 
 typedef struct screen_s {
-    list          *tiles;
-    uint8_t       *buffer;
-    uint32_t      width;
-    uint32_t      height;
-    int32_t       cursor;
-    uint64_t      attrib;
-    tile          *current;
-    sauce         *record;
+    list            *tiles;
+    uint8_t         *buffer;
+    int32_t         width;
+    int32_t         height;
+    int64_t         cursor;
+    tile            *current;
+    sauce           *record;
+    palette         *palette;
+    font            *font;
 } screen;
 
 
 // Function prototypes
 
-screen *screen_create(uint32_t, uint32_t, sauce *);
-void    screen_free(screen *);
-void    screen_putchar(screen *, unsigned char);
-void    screen_reset(screen *);
+screen *screen_create(int32_t width, int32_t height, sauce *);
+void    screen_free(screen *display);
+void    screen_putchar(screen *display, uint8_t ch, int32_t *x, int32_t *y);
+void    screen_insert_line(screen *display, int32_t y);
+void    screen_reduce(screen *display, int32_t width, int32_t height);
+void    screen_reset(screen *display);
 
-bool    screen_tile_reset(void *);
-tile   *screen_tile_append(screen *);
+bool    screen_tile_reset(void *tile);
+tile   *screen_tile_append(screen *display);
 
 #endif // __SCREEN_H__

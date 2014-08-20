@@ -10,6 +10,7 @@
 # define UNUSED(x) x
 #endif
 
+void       *allocate(size_t);
 char       *get_extension(const char *filename);
 int32_t     max32(int32_t a, int32_t b);
 int32_t     min32(int32_t a, int32_t b);

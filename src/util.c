@@ -1,7 +1,19 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "util.h"
+
+void *allocate(size_t size)
+{
+    void *allocated = malloc(size);
+    if (allocated == NULL) {
+        fprintf(stderr, "out of memory trying to allocate %lu bytes\n", size);
+        exit(1);
+    }
+    memset(allocated, 0, size);
+    return allocated;
+}
 
 char *get_extension(const char *filename)
 {

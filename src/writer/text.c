@@ -21,7 +21,7 @@ void text_writer_write(screen *display, const char *filename, font *UNUSED(font)
 
     uint64_t i = 0;
     while (node != NULL) {
-        tile *current = (tile *) node->data;
+        tile *current = node->data;
         fputc((char) current->ch, fd);
         if (ferror(fd)) {
             fprintf(stderr, "%s: write error %d\n", filename, ferror(fd));
@@ -46,5 +46,5 @@ static writer text_writer = {
 };
 
 void text_writer_init(void) {
-    writer_register(text_writer);
+    writer_register(&text_writer);
 }

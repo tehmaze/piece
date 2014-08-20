@@ -24,7 +24,8 @@ typedef struct parser_s {
 // Function prototypes
 
 void    parser_init(void);
-void    parser_register(parser);
+void    parser_free(void);
+void    parser_register(parser *);
 void    parser_iter(list_iterator);
 parser *parser_for_type(const char *);
 parser *parser_for(const char *);

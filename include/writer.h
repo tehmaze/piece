@@ -14,8 +14,9 @@ typedef struct writer_s {
 } writer;
 
 void    writer_init(void);
+void    writer_free(void);
 void    writer_iter(list_iterator iterator);
 writer *writer_for_type(const char *typename);
-void    writer_register(writer);
+void    writer_register(writer *);
 
 #endif // __WRITER_H

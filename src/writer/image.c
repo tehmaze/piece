@@ -26,7 +26,6 @@ static void image_fontcpy(gdImagePtr image, font *font,
 
     for (uint32_t row = 0; row < font->h; ++row) {
         unsigned char glyph = font->glyphs[offset + row];
-        //printf("0x%02x ", glyph);
         for (uint32_t col = 0; col < bits; ++col) {
             if (((0x80 >> col) & glyph) != 0) {
                 gdImageSetPixel(
@@ -58,7 +57,7 @@ static void image_save(gdImagePtr image, const char *filename)
         extension[i] = tolower(extension[i]);
     }
 
-    printf("saving %s (type %s)\n", filename, extension);
+    printf("\nsaving %s (type %s)\n", filename, extension);
 
     if (!strcmp(extension, "bmp")) {
         free(extension);
@@ -101,19 +100,32 @@ static void image_save(gdImagePtr image, const char *filename)
 
 void image_writer_write(screen *display, const char *filename, font *font)
 {
-    int32_t colors[21], i, j, canvas_back;
+    int32_t colors[256], i, j, canvas_back;
     uint16_t bits = sauce_flag_letter_spacing(display->record);
     gdImagePtr image_ansi, image_font, image_back;
 
-    image_back = gdImageCreate(9 * 16, 16);
-    image_font = gdImageCreate(font->w * 256, font->h * 16);
+    if (display->palette == NULL) {
+        fprintf(stderr, "%s: empty palette selected\n", filename);
+        exit(1);
+    }
+
+    printf("%s: using %d bit glyphs from font %s\n", filename, bits, font->name);
+
+    image_back = gdImageCreate(
+        9 * display->palette->colors,
+        16
+    );
+    image_font = gdImageCreate(
+        font->w * 256,
+        font->h * display->palette->colors
+    );
     image_ansi = gdImageCreate(bits * display->width,
                                font->h * display->height);
 
     if (image_back == NULL ||
         image_font == NULL ||
         image_ansi == NULL) {
-        fprintf(stderr, "%s: out of memory trying to create %dx%d image",
+        fprintf(stderr, "%s: out of memory trying to create %dx%d image\n",
                         filename,
                         bits * display->width,
                         font->h * display->height);
@@ -121,21 +133,31 @@ void image_writer_write(screen *display, const char *filename, font *font)
     }
 
     // Colors for font (and back)
-    for (i = 0; i < 16; ++i) {
-        colors[i] = gdImageColorAllocate(image_font, EGA[i].r,
-                                                     EGA[i].g,
-                                                     EGA[i].b);
+    printf("setting up %d color palette %s\n", display->palette->colors,
+                                               display->palette->name);
+    for (i = 0; i < display->palette->colors; ++i) {
+        colors[i] = gdImageColorAllocate(
+            image_font,
+            display->palette->color[i].r,
+            display->palette->color[i].g,
+            display->palette->color[i].b
+        );
     }
-    colors[20] = gdImageColorAllocate(image_font, 200, 220, 169);
-    gdImageColorTransparent(image_font, 20);
+    colors[255] = gdImageColorAllocate(image_font, 200, 220, 169);
+    gdImageColorTransparent(image_font, 255);
     gdImagePaletteCopy(image_back, image_font);
     canvas_back = gdImageColorAllocate(image_ansi, 0, 0, 0);
 
     // Font background is transparent
-    gdImageFilledRectangle(image_font, 0, 0, 256 * font->w, 16 * font->h, 20);
+    gdImageFilledRectangle(
+        image_font,
+        0, 0,
+        font->w * 256, font->h * display->palette->colors,
+        255
+    );
 
     // Colors for underline
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < display->palette->colors; ++i) {
         int32_t r = gdImageRed(image_back, i),
                 g = gdImageGreen(image_back, i),
                 b = gdImageBlue(image_back, i);
@@ -143,15 +165,20 @@ void image_writer_write(screen *display, const char *filename, font *font)
     }
 
     // Render font bitmaps
-    for (int32_t fg = 0; fg < 16; ++fg) {
+    for (int32_t fg = 0; fg < display->palette->colors; ++fg) {
         for (uint32_t ch = 0; ch < 256; ++ch) {
             image_fontcpy(image_font, font, bits, fg, ch);
         }
     }
 
     // Render back bitmaps
-    for (i = 0; i < 16; ++i) {
-        gdImageFilledRectangle(image_back, i * 9, 0, i * 9 + 9, 16, i);
+    for (i = 0; i < display->palette->colors; ++i) {
+        gdImageFilledRectangle(
+            image_back,
+            i * 9, 0,
+            i * 9 + 9, 16,
+            i
+        );
     }
 
     // Print piece onto canvas
@@ -160,13 +187,13 @@ void image_writer_write(screen *display, const char *filename, font *font)
          node->next != NULL;
          node = node->next) {
 
-         int32_t x = (i % display->width) * bits,
-                 y = (i / display->width) * font->h;
+        int32_t x = (i % display->width) * bits,
+                y = (i / display->width) * font->h;
 
-         tile *current = (tile *) node->data;
-         //printf("render %c [%u] at %dx%d\n", current->ch, current->ch, x, y);
+        tile *current = (tile *) node->data;
+        //printf("render %c [%u] at %dx%d\n", current->ch, current->ch, x, y);
 
-         gdImageCopy(
+        gdImageCopy(
             image_ansi,
             image_back,
             x, y,
@@ -174,8 +201,8 @@ void image_writer_write(screen *display, const char *filename, font *font)
             0,
             bits,
             font->h
-         );
-         gdImageCopy(
+        );
+        gdImageCopy(
             image_ansi,
             image_font,
             x, y,
@@ -183,41 +210,14 @@ void image_writer_write(screen *display, const char *filename, font *font)
             current->fg * font->h,
             bits,
             font->h
-         );
-
-         i++;
-    }
-    /*
-    for (i = 0; i < 256; ++i) {
-        uint32_t x = (i % 80) * bits,
-                 y = (i / 80) * font->h,
-                 b = (i % 8),
-                 f = ((i + 4) % 16);
-
-        gdImageCopy(
-            image_ansi,
-            image_back,
-            x, y,
-            b * 9,
-            0,
-            bits,
-            font->h
         );
-        gdImageCopy(
-            image_ansi,
-            image_font,
-            x, y,
-            (unsigned char) i * font->w,
-            f * font->h,
-            bits,
-            font->h
-        );
-    }
-    */
 
-    //gdImagePng(image_ansi, fd);
-    //gdImagePng(image_font, fd);
+        i++;
+    }
+
     image_save(image_ansi, filename);
+    //image_save(image_back, filename);
+    //image_save(image_font, filename);
 
     gdImageDestroy(image_font);
     gdImageDestroy(image_back);
@@ -232,5 +232,5 @@ static writer image_writer = {
 };
 
 void image_writer_init(void) {
-    writer_register(image_writer);
+    writer_register(&image_writer);
 }

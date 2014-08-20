@@ -1,31 +1,27 @@
 #ifndef __PALETTE_H
 #define __PALETTE_H
 
+#include <stdint.h>
+#include "list.h"
+
 typedef struct rgb_color_s {
     uint8_t r;
     uint8_t g;
     uint8_t b;
 } rgb_color;
 
+typedef struct rgb_palette_s {
+    char      *name;
+    rgb_color color[256];
+    uint16_t  colors;
+} palette;
 
-static rgb_color EGA[16] = {
-    {0x00, 0x00, 0x00},     /* Black */
-    {0xaa, 0x00, 0x00},     /* Red */
-    {0x00, 0xaa, 0x00},     /* Green */
-    {0xaa, 0x55, 0x00},     /* Brown */
-    {0x00, 0x00, 0xaa},     /* Blue */
-    {0xaa, 0x00, 0xaa},     /* Magenta */
-    {0x00, 0xaa, 0xaa},     /* Cyan */
-    {0xaa, 0xaa, 0xaa},     /* White */
-    {0x55, 0x55, 0x55},     /* Black (dark) */
-    {0xff, 0x55, 0x55},     /* Red */
-    {0x55, 0xff, 0x55},     /* green */
-    {0xff, 0xff, 0x55},     /* yellow */
-    {0x55, 0x55, 0xff},     /* blue */
-    {0xff, 0x55, 0xff},     /* magenta */
-    {0x55, 0xff, 0xff},     /* cyan */
-    {0xff, 0xff, 0xff},     /* white */
-};
+extern palette *EGA, *VGA;
+extern list *palettes;
 
+void        palette_init(void);
+void        palette_free(void);
+void        palette_iter(list_iterator);
+palette    *palette_by_name(const char *);
 
 #endif // __PALETTE_H

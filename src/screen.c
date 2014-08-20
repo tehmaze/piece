@@ -1,51 +1,44 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "screen.h"
+#include "util.h"
 
-screen *screen_create(unsigned int width, unsigned int height, sauce *record)
+static void screen_tile_free(void *element)
 {
-    unsigned int x, y;
+    free(element);
+}
+
+screen *screen_create(int32_t width, int32_t height, sauce *record)
+{
     screen *display;
     list *tiles;
     tile *current;
 
-    display = malloc(sizeof(screen));
-    if (display == NULL) {
-        fprintf(stderr, "out of memory\n");
-        return NULL;
-    }
-    tiles = malloc(sizeof(list));
-    if (tiles == NULL) {
-        free(display);
-        fprintf(stderr, "out of memory\n");
-        return NULL;
-    }
-    list_new(tiles, sizeof(tile), NULL);
-    current = malloc(sizeof(tile));
-    if (current == NULL) {
-        free(tiles);
-        free(display);
-        fprintf(stderr, "out of memory\n");
-        return NULL;
-    }
+    display = allocate(sizeof(screen));
+    tiles = allocate(sizeof(list));
+    list_new(tiles, screen_tile_free);
+    current = allocate(sizeof(tile));
 
     printf("setting up %dx%d screen\n", width, height);
 
     display->tiles = tiles;
     display->width = width;
     display->height = height;
-    display->attrib = ATTRIB_DEFAULT;
     display->current = current;
     display->current->fg = TILE_DEFAULT_FG;
     display->current->bg = TILE_DEFAULT_BG;
     display->current->ch = TILE_DEFAULT_CH;
+    display->current->attrib = TILE_DEFAULT_ATTRIB;
     display->current->next = NULL;
     display->record = record;
+    display->palette = NULL;
+    display->font = NULL;
 
-    for(y = 0; y < height; ++y) {
-        for (x = 0; x < width; ++x) {
+    for(int32_t y = 0; y < height; ++y) {
+        for (int32_t x = 0; x < width; ++x) {
             if (screen_tile_append(display) == NULL) {
                 exit(0);
             }
@@ -57,8 +50,8 @@ screen *screen_create(unsigned int width, unsigned int height, sauce *record)
 
 void screen_free(screen *display)
 {
-    free(display->buffer);
-    display->buffer = NULL;
+    //free(display->buffer);
+    //display->buffer = NULL;
     free(display->current);
     display->current = NULL;
     list_free(display->tiles);
@@ -68,9 +61,11 @@ void screen_free(screen *display)
     free(display);
 }
 
-void screen_putchar(screen *display, unsigned char ch)
+void screen_putchar(screen *display, unsigned char ch, int32_t *x, int32_t *y)
 {
     int64_t i;
+    uint8_t tmp;
+    display->cursor = (display->width * (*y)) + (*x);
     while (display->cursor >= list_size(display->tiles))
     {
         for (i = 0; i < display->width; ++i) {
@@ -83,26 +78,74 @@ void screen_putchar(screen *display, unsigned char ch)
         node = node->next;
     }
     tile *current = node->data;
+    current->fg = display->current->fg;
+    current->bg = display->current->bg;
+    current->ch = ch;
+    current->attrib = display->current->attrib;
 
-    if (display->attrib & ATTRIB_NEGATIVE) {
-        current->fg = display->current->bg;
-        current->bg = display->current->fg;
-    } else {
-        current->fg = display->current->fg;
-        current->bg = display->current->bg;
-    }
-    if (display->attrib & ATTRIB_BOLD &&
-      !(display->attrib & ATTRIB_FG_256)) {
+    if (current->attrib & ATTRIB_BOLD) {
         current->fg += 8;
     }
-    if (display->attrib & ATTRIB_BLINK &&
-      !(display->attrib & ATTRIB_BG_256)) {
-        if (sauce_flag_non_blink(display->record)) {
-            current->bg += 8;
-        }
+    if (current->attrib & ATTRIB_BLINK) {
+        current->bg += 8;
     }
-    current->ch = ch;
+    if (current->attrib & ATTRIB_NEGATIVE) {
+        tmp = current->fg;
+        current->fg = current->bg;
+        current->bg = tmp;
+    }
+
     display->cursor++;
+    (*x)++;
+    if (*x == (int32_t) display->width) {
+        *x = 0;
+        (*y)++;
+    }
+}
+
+void screen_insert_line(screen *display, int32_t y)
+{
+    int64_t offset = (display->width * y), i;
+    list_node *node = display->tiles->head;
+    for (; offset > 0; offset--) {
+        node = node->next;
+    }
+
+    // Insert order doesn't really matter, so we're adding in front
+    for (i = 0; i < display->width; i++) {
+        tile *current = allocate(sizeof(tile));
+        current->next = node->next->data;
+        current->fg = ((tile *) node->data)->fg;
+        current->bg = ((tile *) node->data)->bg;
+        current->ch = TILE_DEFAULT_CH;
+        current->attrib = ((tile *) node->data)->attrib;
+
+        list_node *new = allocate(sizeof(list_node));
+        memcpy(new->data, current, sizeof(tile));
+        new->next = node->next;
+        node->next = new;
+    }
+}
+
+void screen_reduce(screen *display, int32_t width, int32_t height)
+{
+    int64_t limit = width * height,
+            total = list_size(display->tiles),
+            i;
+
+    if (total > limit) {
+        list_node *node = display->tiles->head, *next = NULL;
+        for (i = 0; i < limit; ++i) {
+            node = node->next;
+        }
+        display->tiles->tail = node;
+        for (i = limit; i < total; ++i) {
+            next = node->next;
+            node->next = NULL;
+            free(node);
+        }
+        display->tiles->tail->next = NULL;
+    }
 }
 
 void screen_reset(screen *display)
@@ -116,24 +159,22 @@ bool screen_tile_reset(void *item)
     current->fg = TILE_DEFAULT_FG;
     current->bg = TILE_DEFAULT_BG;
     current->ch = TILE_DEFAULT_CH;
+    current->attrib = TILE_DEFAULT_ATTRIB;
+    printf("reset %p ", item);
     return true;
 }
 
 tile *screen_tile_append(screen *display)
 {
-    tile *current = malloc(sizeof(tile));
-    if (current == NULL) {
-        fprintf(stderr, "out of memory\n");
-        return NULL;
-    }
-
+    tile *current = allocate(sizeof(tile));
     current->next = NULL;
     current->fg = TILE_DEFAULT_FG;
     current->bg = TILE_DEFAULT_BG;
     current->ch = TILE_DEFAULT_CH;
+    current->attrib = TILE_DEFAULT_ATTRIB;
 
     // Advance to last tile
-    list_append(display->tiles, &current);
+    list_append(display->tiles, current);
 
     // Update screen height
     display->height = 1 + ((list_size(display->tiles) - 1) / display->width);

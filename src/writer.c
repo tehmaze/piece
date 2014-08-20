@@ -3,23 +3,24 @@
 #include <string.h>
 #include "list.h"
 #include "writer.h"
+#include "util.h"
 
 static list *writers;
 
-void writer_init()
+void writer_init(void)
 {
-    writers = (list *) malloc(sizeof(list));
-    if (writers == NULL) {
-        fprintf(stderr, "out of memory");
-        exit(1);
-    }
-    list_new(writers, sizeof(writer), NULL);
+    writers = allocate(sizeof(list));
+    list_new(writers, NULL);
 }
 
-void writer_register(writer details)
+void writer_free(void)
 {
-    fprintf(stderr, "writer: registering %s\n", details.name);
-    list_append(writers, &details);
+    list_free(writers);
+}
+
+void writer_register(writer *details)
+{
+    list_append(writers, details);
 }
 
 void writer_iter(list_iterator iterator)

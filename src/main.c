@@ -4,17 +4,20 @@
 #include <string.h>
 #include <getopt.h>
 
-#include "list.h"
 #include "font.h"
-#include "parser.h"
+#include "list.h"
+#include "palette.h"
 #include "parser/ansi.h"
+#include "parser.h"
 #include "parser/xbin.h"
+#include "sauce.h"
 #include "writer.h"
 #include "writer/image.h"
 #include "writer/text.h"
 
 const char* program_name;
 const char* fontname_default = "cp437_8x16";
+const char* palette_default = "auto";
 
 bool print_font_list_item(void *item)
 {
@@ -33,10 +36,27 @@ void print_font_list(void)
     font_iter(print_font_list_item);
 }
 
+bool print_palette_list_item(void *item)
+{
+    palette *current = (palette *) item;
+    printf("  %s", current->name);
+    if (!strcmp(current->name, palette_default)) {
+        printf(" (default)");
+    }
+    printf("\n");
+    return true;
+}
+
+void print_palette_list(void)
+{
+    printf("supported palettes:\n");
+    palette_iter(print_palette_list_item);
+}
+
 bool print_writer_list_item(void *item)
 {
     writer *current = (writer *) item;
-    printf("  %s\n", current->name);
+    printf("  %-8s: %s\n", current->name, current->description);
     return true;
 }
 
@@ -48,8 +68,16 @@ void print_writer_list(void)
 
 bool print_type_list_item(void *item)
 {
-    parser *current = (parser *)item;
+    parser *current = item;
     printf("  %-8s: %s\n", current->name, current->description);
+    printf("            Extensions: ");
+    for (int i = 0; ; i++) {
+        if (current->extensions[i] == NULL) {
+            printf("\n");
+            break;
+        }
+        printf("*.%s ", current->extensions[i]);
+    }
     return true;
 }
 
@@ -59,35 +87,51 @@ void print_type_list(void)
     parser_iter(print_type_list_item);
 }
 
-void print_usage(FILE *stream, int exit_code)
+void print_usage(FILE *stream, int exit_code, bool long_help)
 {
     fprintf(stream, "%s [<options>] input\n", program_name);
     fprintf(
         stream,
-        "  -h --help                Display this usage inwriterion\n"
+        "  -h --help                Display usage information\n"
+        "  -H --long-helo           Display usage information with all options\n"
         "\n"
         "  -t --type <type>         Input file type, use \"list\" for a list\n"
         "                                            use \"auto\" to auto detect\n"
         "\n"
         "  -f --font <font>         Output font name, use \"list\" for a list\n"
+        "  -p --palette <palette>   Output palette name, use \"list\" for a list\n"
         "  -o --output <filename>   Output file name\n"
         "  -w --writer <type>       Output writer, use \"list\" for a list\n"
     );
+
+    if (long_help) {
+        fprintf(stream, "\n");
+        print_type_list();
+        fprintf(stream, "\n");
+        print_font_list();
+        fprintf(stream, "\n");
+        print_palette_list();
+        fprintf(stream, "\n");
+        print_writer_list();
+    }
+
     exit(exit_code);
 }
 
 int main(int argc, char *argv[])
 {
-    const char* const short_options = "hvt:f:o:w:";
+    const char* const short_options = "hHvt:f:o:p:w:";
     const struct option long_options[] = {
-        {"help",    no_argument,       NULL, 'h'},
-        {"verbose", no_argument,       NULL, 'v'},
+        {"help",      no_argument,       NULL, 'h'},
+        {"long-help", no_argument,       NULL, 'H'},
+        {"verbose",   no_argument,       NULL, 'v'},
         /* Input options */
-        {"type",    required_argument, NULL, 't'},
+        {"type",      required_argument, NULL, 't'},
         /* Output options */
-        {"font",    required_argument, NULL, 'f'},
-        {"output",  required_argument, NULL, 'o'},
-        {"writer",  required_argument, NULL, 'w'},
+        {"font",      required_argument, NULL, 'f'},
+        {"output",    required_argument, NULL, 'o'},
+        {"palette",   required_argument, NULL, 'p'},
+        {"writer",    required_argument, NULL, 'w'},
         {0, 0, 0, 0} /* sentinel */
     };
 
@@ -97,6 +141,7 @@ int main(int argc, char *argv[])
     const char *target_filename = NULL;
     const char *target_fontname = "cp437_8x16";
     const char *target_typename = "png";
+    const char *target_palette  = "vga";
 
     /* Initialize parsers */
     parser_init();
@@ -110,6 +155,10 @@ int main(int argc, char *argv[])
 
     /* Initialize fonts */
     font_init();
+    sauce_init();
+
+    /* Initialize palettes */
+    palette_init();
 
     /* Parser command line arguments */
 
@@ -123,7 +172,11 @@ int main(int argc, char *argv[])
 
         switch (next_option) {
             case 'h':
-                print_usage(stdout, 0);
+                print_usage(stdout, 0, false);
+                break;
+
+            case 'H':
+                print_usage(stdout, 0, true);
                 break;
 
             case 'v':
@@ -152,6 +205,15 @@ int main(int argc, char *argv[])
                 target_filename = optarg;
                 break;
 
+            case 'p':
+                target_palette = optarg;
+                if (!strcmp(target_palette, "list") ||
+                    !strcmp(target_palette, "help")) {
+                    print_palette_list();
+                    exit(0);
+                }
+                break;
+
             case 'w':
                 target_typename = optarg;
                 if (!strcmp(target_typename, "list") ||
@@ -163,7 +225,7 @@ int main(int argc, char *argv[])
 
             case '?':
                 fprintf(stderr, "?: invalid argument\n");
-                print_usage(stderr, 1);
+                print_usage(stderr, 1, false);
 
             case -1:
                 break;
@@ -179,13 +241,13 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "invalid number of arguments\n");
             fprintf(stderr, "remainder: \"%s\"\n", argv[i]);
-            print_usage(stderr, 1);
+            print_usage(stderr, 1, false);
         }
     }
 
     if (target_filename == NULL || source_filename == NULL) {
         fprintf(stderr, "both input and output file name required\n");
-        print_usage(stderr, 1);
+        print_usage(stderr, 1, false);
     }
 
     if (verbose) {
@@ -233,11 +295,16 @@ int main(int argc, char *argv[])
         exit(1);
     }
     printf("read %d tiles\n", list_size(display->tiles));
+    if (display->font != NULL) {
+        target_font = display->font;
+    }
     target_writer->write(display, target_filename, target_font);
 
-    free(source_parser);
-    free(target_writer);
     screen_free(display);
+    parser_free();
+    writer_free();
+    font_free();
+    palette_free();
 
     return 0;
 }

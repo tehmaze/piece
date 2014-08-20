@@ -32,7 +32,6 @@
 
 #define SAUCE_FILE_TYPE_XBIN        0
 
-
 typedef struct sauce_flags_s {
     uint8_t     flag_b        : 1;
     uint8_t     flag_ls       : 2;
@@ -76,5 +75,8 @@ void    sauce_read_comments(FILE *fd, char **comment, int32_t comments);
 void    sauce_free(sauce *record);
 bool    sauce_flag_non_blink(sauce *record);
 uint8_t sauce_flag_letter_spacing(sauce *record);
+font   *sauce_font(sauce *record);
+size_t  sauce_size(sauce *record);
+void    sauce_init(void);
 
 #endif // __SAUCE_H

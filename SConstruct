@@ -59,6 +59,7 @@ target = env.Program(
         'src/util.c',
         'src/sauce.c',
         'src/screen.c',
+        'src/palette.c',
         'src/parser.c',
         Glob('src/parser/*.c'),
         'src/writer.c',

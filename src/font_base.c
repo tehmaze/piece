@@ -4,8 +4,14 @@
 
 list *fonts;
 
-void font_iter(list_iterator iterator) {
+void font_iter(list_iterator iterator)
+{
     list_foreach(fonts, iterator);
+}
+
+void font_free(void)
+{
+    list_free(fonts);
 }
 
 font *font_by_name(const char *name)

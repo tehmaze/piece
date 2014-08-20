@@ -65,7 +65,7 @@ def convert_to(sources, target):
 
         handle.write('void font_init(void) {\n')
         handle.write('    fonts = malloc(sizeof(list));\n');
-        handle.write('    list_new(fonts, sizeof(font), NULL);\n')
+        handle.write('    list_new(fonts, NULL);\n')
         for fontname in fontnames:
             handle.write('    list_append(fonts, &{0}_font);\n'.format(fontname))
         handle.write('}\n\n')

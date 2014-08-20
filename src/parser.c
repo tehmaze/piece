@@ -7,20 +7,20 @@
 
 static list *parsers;
 
-void parser_init()
+void parser_init(void)
 {
-    parsers = malloc(sizeof(list));
-    if (parsers == NULL) {
-        fprintf(stderr, "out of memory");
-        exit(1);
-    }
-    list_new(parsers, sizeof(parser), NULL);
+    parsers = allocate(sizeof(list));
+    list_new(parsers, NULL);
 }
 
-void parser_register(parser details)
+void parser_free(void)
 {
-    fprintf(stderr, "parser: registering %s\n", details.name);
-    list_append(parsers, &details);
+    list_free(parsers);
+}
+
+void parser_register(parser *details)
+{
+    list_append(parsers, details);
 }
 
 void parser_iter(list_iterator iterator)
@@ -48,17 +48,16 @@ parser *parser_for(const char *filename)
     parser *found = NULL;
 
     if (!strcmp(extension, "")) {
-        free(extension);
-        return parser_for_type("ansi");
+        found = parser_for_type("ansi");
+        parser_name = "ansi";
 
     } else {
-        free(extension);
-
         /* Iterate over all known parsers and their extensions */
         list_node *node = parsers->head;
         while (node != NULL) {
             parser *current = (parser *) node->data;
             for (int i = 0; current->extensions[i] != NULL; ++i) {
+                printf("%s <> %s\n", current->extensions[i], extension);
                 if (!strcmp(current->extensions[i], extension)) {
                     parser_name = current->name;
                     found = current;
@@ -72,6 +71,7 @@ parser *parser_for(const char *filename)
         }
     }
 
+    free(extension);
     printf("found parser %s for %s\n", parser_name, filename);
     return found;
 }
