@@ -19,8 +19,8 @@ Building
 
 To compile everything from source:
 
-  scons
+    scons
 
 To clean the build root:
 
-  scons -c
+    scons -c
