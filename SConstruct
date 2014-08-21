@@ -15,6 +15,7 @@ env = Environment(
         '-std=c99',
         '-Wall',
         '-Wextra',
+        '-Wno-pointer-arith',
         '-pedantic-errors',
         '-D_GNU_SOURCE',
     ],
@@ -52,6 +53,16 @@ target_font = env.Command(
 )
 
 
+target = env.Program(
+    'sauce',
+    [
+        'src/list.c',
+        'src/util.c',
+        'src/font_base.c',
+        'src/sauce.c',
+        'src/mainsauce.c',
+    ],
+)
 target = env.Program(
     'piece',
     [

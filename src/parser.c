@@ -41,37 +41,58 @@ parser *parser_for_type(const char *typename)
     return NULL;
 }
 
-parser *parser_for(const char *filename)
+parser *parser_for(FILE *fd, const char *filename)
 {
-    char *extension = get_extension(filename);
-    char *parser_name = "";
+    char *extension;
     parser *found = NULL;
+    list_node *node;
+    parser *current;
 
-    if (!strcmp(extension, "")) {
-        found = parser_for_type("ansi");
-        parser_name = "ansi";
-
-    } else {
-        /* Iterate over all known parsers and their extensions */
-        list_node *node = parsers->head;
-        while (node != NULL) {
-            parser *current = (parser *) node->data;
-            for (int i = 0; current->extensions[i] != NULL; ++i) {
-                printf("%s <> %s\n", current->extensions[i], extension);
-                if (!strcmp(current->extensions[i], extension)) {
-                    parser_name = current->name;
-                    found = current;
-                    node = NULL;
-                    break;
-                }
+    // Strategy 1: use the parser probes
+    for (node = parsers->head; node != NULL; node = node->next) {
+        current = node->data;
+        if (current->probe != NULL) {
+            if (fseek(fd, 0, SEEK_SET)) {
+                fprintf(stderr, "%s: could not rewind\n", filename);
+                break;
             }
-
-            if (node != NULL)
-                node = node->next;
+            else if (current->probe(fd, filename)) {
+                found = current;
+                break;
+            }
         }
     }
 
-    free(extension);
-    printf("found parser %s for %s\n", parser_name, filename);
+
+    // Strategy 2: use the file extension
+    if (found == NULL) {
+        extension = get_extension(filename);
+        if (!strcmp(extension, "")) {
+
+        } else {
+            /* Iterate over all known parsers and their extensions */
+            for (node = parsers->head; node != NULL; node = node->next) {
+                current = node->data;
+                for (int i = 0; current->extensions[i] != NULL; ++i) {
+                    if (!strcmp(current->extensions[i], extension)) {
+                        found = current;
+                        node = NULL;
+                        break;
+                    }
+                }
+                if (node == NULL)
+                    break;
+            }
+        }
+
+        free(extension);
+    }
+
+    if (found == NULL) {
+        fprintf(stderr, "%s: no suitable parser found, using ANSi parser\n",
+                        filename);
+        found = parser_for_type("ansi");
+    }
+
     return found;
 }

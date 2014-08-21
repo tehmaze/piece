@@ -23,14 +23,17 @@ static ansi_sequence *sequence_new(void) {
     return sequence;
 }
 
-screen *ansi_parser_read(const char *filename)
+static void sequence_free(void *sequence) {
+    free(sequence);
+}
+
+screen *ansi_parser_read(FILE *fd, const char *filename)
 {
-    FILE *fd = NULL;
     screen *display = NULL;
     sauce *record = NULL;
     unsigned int width = 80, height = 25;
     long fsize;
-    ansi_parser_state state = STATE_TEXT;
+    ansi_parser_state state = ANSI_STATE_TEXT;
     unsigned char ch;
     list *sequences = NULL;
     list_node *node = NULL;
@@ -41,7 +44,7 @@ screen *ansi_parser_read(const char *filename)
     int y = 0;
     int x_saved = 0;
     int y_saved = 0;
-    int64_t i, cursor;
+    int i;
     char *feature;
 
     char *extension = get_extension(filename);
@@ -50,12 +53,6 @@ screen *ansi_parser_read(const char *filename)
         width = 45;
     }
     free(extension);
-
-    fd = fopen(filename, "r");
-    if (fd == NULL) {
-        fprintf(stderr, "%s: error opening\n", filename);
-        return NULL;
-    }
 
     record = sauce_read(fd);
     if (record != NULL) {
@@ -91,22 +88,22 @@ screen *ansi_parser_read(const char *filename)
     rewind(fd);
 
     sequences = allocate(sizeof(list));
-    list_new(sequences, NULL);
-    while (state != STATE_EXIT &&
+    list_new(sequences, sequence_free);
+    while (state != ANSI_STATE_EXIT &&
            (ch = fgetc(fd)) != 0x00 &&
            !feof(fd) &&
            ftell(fd) <= fsize
            ) {
 
         switch (state) {
-            case STATE_TEXT:
+            case ANSI_STATE_TEXT:
                 switch(ch) {
                     case '\x1a':
-                        state = STATE_EXIT;
+                        state = ANSI_STATE_EXIT;
                         break;
 
                     case '\x1b':
-                        state = STATE_CHECK_BRACE;
+                        state = ANSI_STATE_CHECK_BRACE;
                         break;
 
                     case '\n':
@@ -121,27 +118,27 @@ screen *ansi_parser_read(const char *filename)
                         if (count) {
                             count = ANSI_TABSTOP - count;
                             for (i = 0; i < count; ++i) {
-                                screen_putchar(display, ' ', &x, &y);
+                                screen_putchar(display, ' ', &x, &y, true);
                             }
                         }
                         break;
 
                     default:
-                        screen_putchar(display, ch, &x, &y);
+                        screen_putchar(display, ch, &x, &y, true);
                         break;
                 }
                 break;
 
-            case STATE_CHECK_BRACE:
+            case ANSI_STATE_CHECK_BRACE:
                 if (ch == '[') {
-                    state = STATE_WAIT_LITERAL;
+                    state = ANSI_STATE_WAIT_LITERAL;
                 } else {
-                    screen_putchar(display, '\x1b', &x, &y);
-                    screen_putchar(display, ch, &x, &y);
+                    screen_putchar(display, '\x1b', &x, &y, true);
+                    screen_putchar(display, ch, &x, &y, true);
                 }
                 break;
 
-            case STATE_WAIT_LITERAL:
+            case ANSI_STATE_WAIT_LITERAL:
                 if (isalpha(ch) || ch == ';') {
                     argbuf[arg_index] = '\x00';
                     ansi_sequence *sequence = sequence_new();
@@ -260,31 +257,22 @@ screen *ansi_parser_read(const char *filename)
 
                             switch (i) {
                                 case 0:     // From cursor to EOF
-                                    node = display->tiles->head;
-                                    cursor = (display->width * y) + x;
-                                    for (i = 0; i < cursor; i++) {
-                                        node = node->next;
-                                    }
-                                    while (node != NULL) {
-                                        screen_tile_reset(node->data);
+                                    for (i = (display->width * y) + x;
+                                         i < display->tiles; ++i) {
+                                         screen_tile_reset(&display->tile[i]);
                                     }
                                     break;
 
                                 case 1:     // From cursor to start
-                                    node = display->tiles->head;
-                                    cursor = (display->width * y) + x;
-                                    for (i = 0; i < cursor; ++i) {
-                                        screen_tile_reset(node->data);
+                                    for (i = (display->width * y) + x;
+                                         i >= 0; --i) {
+                                         screen_tile_reset(&display->tile[i]);
                                     }
                                     break;
 
                                 case 2:     // Entire screen
                                 default:
-                                    node = display->tiles->head;
-                                    while (node != NULL) {
-                                        screen_tile_reset(node->data);
-                                        node = node->next;
-                                    }
+                                    screen_reset(display);
                                     screen_reduce(display, width, height);
                                     y = 0;
                                     x = 0;
@@ -315,17 +303,12 @@ screen *ansi_parser_read(const char *filename)
                             if (start < 0) {
                                 start = 0;
                             }
-                            if (end > list_size(display->tiles)) {
-                                end = list_size(display->tiles) - 1;
+                            if (end > display->tiles) {
+                                end = display->tiles - 1;
                             }
 
-                            node = display->tiles->head;
-                            for (i = 0; i < start; ++i) {
-                                node = node->next;
-                            }
                             for (i = start; i < end; ++i) {
-                                screen_tile_reset(node);
-                                node = node->next;
+                                screen_tile_reset(&display->tile[i]);
                             }
 
                             break;
@@ -404,10 +387,10 @@ screen *ansi_parser_read(const char *filename)
                     if (list_size(sequences) > 0) {
                         list_free(sequences);
                         sequences = allocate(sizeof(list));
-                        list_new(sequences, NULL);
+                        list_new(sequences, sequence_free);
                     }
 
-                    state = STATE_TEXT;
+                    state = ANSI_STATE_TEXT;
                     break;
                 } // if (isalpha(ch))
 
@@ -415,7 +398,7 @@ screen *ansi_parser_read(const char *filename)
                 arg_index++;
                 break;
 
-            case STATE_EXIT:        // We're done here
+            case ANSI_STATE_EXIT:        // We're done here
             default:
                 break;
         }
@@ -553,22 +536,18 @@ void ansi_parser_parse_sgr256(screen *display, uint32_t sgr, uint32_t c)
     }
 }
 
-void ansi_parser_render(screen *display, unsigned int output_type)
-{
-    printf("cursor %lu, type %d", display->cursor, output_type);
-}
-
-
 static char *ansi_extensions[] = {
     "ans",
     NULL
 };
+
 static parser ansi_parser = {
     "ansi",
     "ANSi coloring codes and cursor positioning",
+    NULL,
     ansi_parser_read,
-    ansi_parser_render,
-    ansi_extensions
+    ansi_extensions,
+    "cp437_8x16"
 };
 
 void ansi_parser_init() {

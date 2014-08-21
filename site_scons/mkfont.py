@@ -56,23 +56,20 @@ def convert(filename, stream=sys.stdout):
 def convert_to(sources, target):
     with open(target, 'w') as handle:
         handle.write('/* This file is generated, do not modify */\n\n')
+        handle.write('/* Splint directives */\n/*@+charint@*/\n\n')
         handle.write('#include <stdlib.h>\n')
         handle.write('#include "font.h"\n\n')
-        #handle.write('static list *fonts;\n')
+        handle.write('#include "util.h"\n\n')
         fontnames = []
         for source in sources:
             fontnames.append(convert(str(source), handle))
 
         handle.write('void font_init(void) {\n')
-        handle.write('    fonts = malloc(sizeof(list));\n');
+        handle.write('    fonts = allocate(sizeof(list));\n');
         handle.write('    list_new(fonts, NULL);\n')
         for fontname in fontnames:
             handle.write('    list_append(fonts, &{0}_font);\n'.format(fontname))
         handle.write('}\n\n')
-
-        #handle.write('void font_iter(list_iterator iterator) {\n')
-        #handle.write('    list_foreach(fonts, iterator);\n')
-        #handle.write('}\n')
 
 
 def run():

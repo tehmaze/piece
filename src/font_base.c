@@ -14,14 +14,14 @@ void font_free(void)
     list_free(fonts);
 }
 
-font *font_by_name(const char *name)
+font /*@null@*/ *font_by_name(const char *name)
 {
-    list_node *node = fonts->head;
-    while (node != NULL) {
-        if (!strcmp(((font *) node->data)->name, name)) {
-            return (font *) node->data;
+    list_node *node;
+    for (node = fonts->head; node != NULL; node = node->next) {
+        font *curr = node->data;
+        if (!strcmp(curr->name, name)) {
+            return curr;
         }
-        node = node->next;
     }
 
     return NULL;

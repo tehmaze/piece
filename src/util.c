@@ -15,6 +15,16 @@ void *allocate(size_t size)
     return allocated;
 }
 
+int16_t fget16(FILE *fd)
+{
+    return (fgetc(fd) << 8 | fgetc(fd));
+}
+
+int32_t fget32(FILE *fd)
+{
+    return (fgetc(fd) << 24 | fgetc(fd) << 16 | fgetc(fd) << 8 | fgetc(fd));
+}
+
 char *get_extension(const char *filename)
 {
     const char *dot = strrchr(filename, '.');

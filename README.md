@@ -11,13 +11,13 @@ Supported file formats:
 
 * ANSi (.ans), mostly [ECMA-048](http://www.ecma-international.org/publications/standards/Ecma-048.htm) compliant
 * ASCII (.asc, .diz)
-* XBIN (.xb), fully [Acid XBIN](http://www.acid.org/info/xbin/xbin.htm) compliant
+* Artworx (.adf)
 * BIN (.bin, TODO)
-* TundraDraw (.tnd, TODO)
+* iCE Draw (.idf)
+* PCBoard (.pcb)
 * RIPScript (.rip, TODO)
-* PCBoard (.pcb, TODO)
-* Artworx (.adf, TODO)
-* iCE Draw (.idf, TODO)
+* TundraDraw (.tnd)
+* XBIN (.xb), fully [Acid XBIN](http://www.acid.org/info/xbin/xbin.htm) compliant
 
 
 Supported pixel fonts:

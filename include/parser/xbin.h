@@ -3,6 +3,14 @@
 
 #include "list.h"
 
+#define XBIN_ID         "XBIN"
+#define XBIN_ID_LEN     4
+
+#define XBIN_COMP_NONE  0x00
+#define XBIN_COMP_CHAR  0x40
+#define XBIN_COMP_ATTR  0x80
+#define XBIN_COMP_BOTH  0xc0
+
 typedef struct xbin_flags_s {
     uint8_t     flag_palette   : 1;
     uint8_t     flag_font      : 1;
@@ -10,7 +18,7 @@ typedef struct xbin_flags_s {
     uint8_t     flag_non_blink : 1;
     uint8_t     flag_512_chars : 1;
     uint8_t     unused         : 3;
-} xbin_flags;
+} __attribute__((packed)) xbin_flags;
 
 typedef struct xbin_header_s {
     char        id[4];
@@ -19,7 +27,7 @@ typedef struct xbin_header_s {
     uint16_t    height;
     uint8_t     font_size;
     xbin_flags  flags;
-} xbin_header;
+} __attribute__((packed)) xbin_header;
 
 
 // Function prototypes

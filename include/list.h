@@ -19,12 +19,12 @@ typedef struct {
     list_free_function free_fn;
 } list;
 
-void    list_new(list *, list_free_function);
-void    list_free(list *);
-void   *list_get(list *list, uint32_t index);
-void    list_prepend(list *, void *);
-void    list_append(list *, void *);
-void    list_foreach(list *, list_iterator);
-int     list_size(list *);
+void                list_new(list *, list_free_function);
+void                list_free(list *);
+void /*@null@*/    *list_get(list *list, uint32_t index);
+void                list_prepend(list *, void *);
+void                list_append(list *, void *);
+void                list_foreach(list *, list_iterator);
+int                 list_size(list *);
 
 #endif // __LIST_H

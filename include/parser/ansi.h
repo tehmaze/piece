@@ -8,10 +8,10 @@
 #define ANSI_TABSTOP 8
 
 typedef enum {
-    STATE_TEXT,
-    STATE_CHECK_BRACE,
-    STATE_WAIT_LITERAL,
-    STATE_EXIT
+    ANSI_STATE_TEXT,
+    ANSI_STATE_CHECK_BRACE,
+    ANSI_STATE_WAIT_LITERAL,
+    ANSI_STATE_EXIT
 } ansi_parser_state;
 
 typedef struct ansi_sequence_s {

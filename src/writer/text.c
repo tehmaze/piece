@@ -14,25 +14,21 @@ void text_writer_write(screen *display, const char *filename, font *UNUSED(font)
         fprintf(stderr, "%s: open fail\n", filename);
         exit(1);
     }
-    list_node *node = display->tiles->head;
 
-    printf("%s: writing %d tiles\n", filename, list_size(display->tiles));
+    printf("%s: writing %d tiles\n", filename, display->tiles);
     printf("%s: %dx%d\n", filename, display->width, display->height);
 
-    uint64_t i = 0;
-    while (node != NULL) {
-        tile *current = node->data;
+    for (int32_t i = 0; i < display->tiles; ++i) {
+        if (i > 0 && i % display->width == 0) {
+            fputs("\r\n", fd);
+        }
+        screen_tile *current = &display->tile[i];
         fputc((char) current->ch, fd);
         if (ferror(fd)) {
             fprintf(stderr, "%s: write error %d\n", filename, ferror(fd));
             exit(1);
         }
         fflush(fd);
-        if (++i % display->width == 0) {
-            fputs("\r\n", fd);
-        }
-
-        node = node->next;
     }
 
     fclose(fd);

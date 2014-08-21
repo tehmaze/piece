@@ -11,7 +11,8 @@
 void list_new(list *list, list_free_function free_fn)
 {
     list->length = 0;
-    list->head = list->tail = NULL;
+    list->head = NULL;
+    list->tail = NULL;
     list->free_fn = free_fn;
 }
 
@@ -34,8 +35,11 @@ void list_free(list *list)
     free(list);
 }
 
-void *list_get(list *list, uint32_t index)
+void /*@null@*/ *list_get(list *list, uint32_t index)
 {
+    if (list == NULL || list->head == NULL)
+        return NULL;
+
     list_node *node = list->head;
     for (uint32_t count = 0; count < index; ++count) {
         if (node->next == NULL) {
@@ -80,9 +84,9 @@ void list_foreach(list *list, list_iterator iterator)
 {
     assert(iterator != NULL);
 
-    unsigned int l = 0;
     list_node *node = list->head;
     bool result = true;
+
     while (node != NULL && result) {
         result = iterator(node->data);
         node = node->next;

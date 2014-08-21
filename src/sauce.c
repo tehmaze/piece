@@ -6,7 +6,7 @@
 #include "sauce.h"
 
 #define SAUCE_READ_STRING(fd, record, field) do {                   \
-    fread(record->field, sizeof(record->field) - 1, 1, fd);         \
+    fread(record->field, sizeof(record->field), 1, fd);             \
     record->field[sizeof(record->field) - 1] = 0x00;                \
     if (ferror(fd)) {                                               \
         fprintf(stderr,                                             \
@@ -90,19 +90,22 @@ sauce *sauce_read(FILE *fd)
     }
     memset(record, 0, sizeof(sauce));
 
-    size_t read = fread(record->id, sizeof(record->id) - 1, 1, fd);
-    record->id[sizeof(record->id) - 1] = 0x00;
-
-    if (read != 1 || strcmp(record->id, SAUCE_ID)) {
+    if (fseek(fd, -SAUCE_RECORD_SIZE, SEEK_END) != 0) {
+        fprintf(stderr, "sauce: fseek() failed\n");
+        free(record);
+        return NULL;
+    }
+    SAUCE_READ_VALUE(fd, record, id);
+    if (memcmp(record->id, SAUCE_ID, sizeof(record->id) - 1)) {
         free(record);
         return NULL;
     }
 
-    SAUCE_READ_STRING(fd, record, version);
+    SAUCE_READ_VALUE(fd, record, version);
     SAUCE_READ_STRING(fd, record, title);
     SAUCE_READ_STRING(fd, record, author);
     SAUCE_READ_STRING(fd, record, group);
-    SAUCE_READ_STRING(fd, record, date);
+    SAUCE_READ_VALUE(fd, record, date);
     SAUCE_READ_VALUE(fd, record, file_size);
     SAUCE_READ_VALUE(fd, record, data_type);
     SAUCE_READ_VALUE(fd, record, file_type);
@@ -174,11 +177,6 @@ bool sauce_flag_non_blink(sauce *record) {
 }
 
 uint8_t sauce_flag_letter_spacing(sauce *record) {
-    if (record != NULL) {
-        printf("sauce_flag_letter_spacing %d\n", record->flags.flag_ls);
-    } else {
-        printf("sauce_flag_letter_spacing NULL\n");
-    }
     return (record != NULL && record->flags.flag_ls == SAUCE_LS_8PIXEL) ? 8 : 9;
 }
 
@@ -199,9 +197,9 @@ size_t sauce_size(sauce *record)
 {
     size_t size = 0;
     if (record != NULL) {
-        size += 128;
+        size += SAUCE_RECORD_SIZE;
         if (record->comments) {
-            size += 5 + 64 * record->comments;
+            size += 5 + SAUCE_COMMENT_SIZE * record->comments;
         }
     }
     return size;

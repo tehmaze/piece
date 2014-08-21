@@ -1,3 +1,8 @@
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,42 +15,20 @@
 #include "palette.h"
 #include "util.h"
 
-screen *xbin_parser_read(const char *filename)
+static void screen_putchar_xbin(screen *display, unsigned char ch,
+                                unsigned char attribute, int *x, int *y)
 {
-    FILE *fd = NULL;
-    screen *display = NULL;
-    sauce *record = NULL;
+    printf("\r%d x %d     ", (*x), (*y));
+    display->current->bg = (attribute & 0xf0) >> 4;
+    display->current->fg = (attribute & 0x0f);
+    screen_putchar(display, ch, x, y, true);
+}
+
+bool xbin_parser_probe(FILE *fd, const char *UNUSED(filename))
+{
     xbin_header *header;
-    palette *xbin_palette;
-    font *xbin_font;
-    unsigned char *xbin_font_glyphs;
-    int16_t xbin_font_chars = 256;
-    int64_t i, xbin_font_total;
-    unsigned char ch, attribute;
-    int16_t repeat, method;
-    int x = 0;
-    int y = 0;
+    bool score = false;
 
-    fd = fopen(filename, "rb");
-    if (fd == NULL) {
-        fprintf(stderr, "%s: error opening\n", filename);
-        return NULL;
-    }
-
-    record = sauce_read(fd);
-    if (record != NULL) {
-        if (record->data_type != SAUCE_DATA_TYPE_XBIN) {
-            fprintf(stderr, "%s: not an XBIN (according to SAUCE)\n", filename);
-            fclose(fd);
-            free(record);
-            return NULL;
-        }
-    } else {
-        record = allocate(sizeof(sauce));
-        record->flags.flag_ls = SAUCE_LS_8PIXEL;
-    }
-
-    rewind(fd);
     header = allocate(sizeof(xbin_header));
     fread(&header->id, 4, 1, fd);
     fread(&header->eof_char, 1, 1, fd);
@@ -53,18 +36,80 @@ screen *xbin_parser_read(const char *filename)
     fread(&header->height, 2, 1, fd);
     fread(&header->font_size, 1, 1, fd);
     fread(&header->flags, 1, 1, fd);
-    if (ferror(fd) || strncmp((const char *) header->id, "XBIN", 4)) {
+
+    score = (
+        !strncmp(header->id, XBIN_ID, XBIN_ID_LEN) &&
+        header->width > 0 &&
+        header->width < 161 &&
+        header->font_size > 0 &&
+        header->font_size < 33
+    );
+    free(header);
+    return score;
+}
+
+screen *xbin_parser_read(FILE *fd, const char *filename)
+{
+    struct stat st;
+    unsigned char *p, *s;
+    screen *display = NULL;
+    sauce *record = NULL;
+    xbin_header *header;
+    palette *xbin_palette;
+    font *xbin_font;
+    int16_t xbin_font_chars = 256;
+    int64_t i, xbin_font_total, fsize, fpos = 0;
+    unsigned char ch, attribute, counts;
+    unsigned char *xbin_data, *tmp;
+    int16_t repeat, method;
+    int x = 0;
+    int y = 0;
+
+    fseek(fd, 0, SEEK_SET);
+    if (fstat(fileno(fd), &st) < 0) {
+        fprintf(stderr, "%s: stat() failed\n", filename);
+        return NULL;
+    }
+
+    p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fileno(fd), 0);
+    if (p == MAP_FAILED) {
+        fprintf(stderr, "%s: mmap() failed\n", filename);
+        return NULL;
+    }
+    s = p;
+
+    record = sauce_read(fd);
+    if (record != NULL) {
+        if (record->data_type != SAUCE_DATA_TYPE_XBIN) {
+            fprintf(stderr, "%s: not an XBIN (according to SAUCE)\n", filename);
+            fclose(fd);
+            free(record);
+            munmap(p, st.st_size);
+            return NULL;
+        }
+        fsize = record->file_size;
+    } else {
+        record = allocate(sizeof(sauce));
+        record->flags.flag_ls = SAUCE_LS_8PIXEL;
+        fseek(fd, 0, SEEK_END);
+        fsize = ftell(fd);
+    }
+
+    rewind(fd);
+    header = (xbin_header *) p;
+    p += sizeof(xbin_header);
+    if (ferror(fd) || memcmp(&header->id, XBIN_ID, sizeof(header->id))) {
         fprintf(stderr, "%s: not an XBIN (got %s)\n", filename, header->id);
         fclose(fd);
         free(record);
         free(header);
+        munmap(p, st.st_size);
         return NULL;
     }
 
     // XBIN overrules SAUCE
     record->flags.flag_b = header->flags.flag_non_blink;
 
-    printf("hi mom\n");
     printf("width: %d\nheight: %d\n", header->width, header->height);
     printf("font_size: %d\n", header->font_size);
     printf("flag palette: %d\n", header->flags.flag_palette);
@@ -72,48 +117,43 @@ screen *xbin_parser_read(const char *filename)
     printf("flag compress: %d\n", header->flags.flag_compress);
     printf("flag non_blink: %d\n", header->flags.flag_non_blink);
     printf("flag 512_chars: %d\n", header->flags.flag_512_chars);
-    printf(".. at %lu\n", ftell(fd));
+    printf(".. at %lu\n", p - s);
 
     if (header->flags.flag_palette) {
         printf("%s: parsing palette\n", filename);
         xbin_palette = allocate(sizeof(palette));
+        xbin_palette->name = "from file";
         xbin_palette->colors = 16;
-        for (i = 0; i < xbin_palette->colors; ++i) {
-            rgb_color c;
-            fread(&c, 3, 1, fd);
-            printf("color %02x %02x %02x\n", c.r << 2, c.g << 2, c.b << 2);
-            xbin_palette->color[i] = (rgb_color) {
-                c.r << 2,
-                c.g << 2,
-                c.b << 2
-            };
+        i = sizeof(rgb_color) * 16;
+        xbin_palette->color = allocate(i);
+        memcpy(xbin_palette->color, p, i);
+        p += i;
+        for (i = 0; i < 16; ++i) {
+            xbin_palette->color[i].r <<= 4;
+            xbin_palette->color[i].g <<= 4;
+            xbin_palette->color[i].b <<= 4;
         }
     } else {
         printf("%s: using ega palette\n", filename);
         xbin_palette = palette_by_name("ega");
     }
-    printf(".. at %lu\n", ftell(fd));
+    printf(".. at %lu (after palette)\n", p - s);
 
     if (header->flags.flag_font) {
         xbin_font_chars = header->flags.flag_512_chars ? 512 : 256;
-        xbin_font_total = xbin_font_chars * header->font_size;
-        printf("%s: parsing %d pixel font", filename, header->font_size);
-        printf(" with %d glyphs\n", xbin_font_chars);
-        printf("%s: allocating %d bytes\n", filename, xbin_font_total);
-        xbin_font_glyphs = allocate(xbin_font_total);
-        for (i = 0; i < xbin_font_total; ++i) {
-            fread(&xbin_font_glyphs[i], 1, 1, fd);
-        }
+        xbin_font_total = xbin_font_chars * 16;
         xbin_font = allocate(sizeof(font));
         xbin_font->name = "xbin";
         xbin_font->w = 9;
         xbin_font->h = header->font_size;
         xbin_font->l = xbin_font_chars;
-        xbin_font->glyphs = xbin_font_glyphs;
+        xbin_font->glyphs = allocate(xbin_font_total);
+        memcpy((unsigned char *) xbin_font->glyphs, p, xbin_font_total);
+        p += xbin_font_total;
     } else {
         xbin_font = NULL;
     }
-    printf(".. at %lu\n", ftell(fd));
+    printf(".. at %lu (after font)\n", p - s);
 
     display = screen_create(header->width, header->height, record);
     if (display == NULL) {
@@ -127,74 +167,89 @@ screen *xbin_parser_read(const char *filename)
     display->palette = xbin_palette;
     display->font = xbin_font;
 
+    fsize = st.st_size - (p - s);
+    printf(".. remains %lu of %lu\n", fsize, st.st_size);
+    unsigned long gsize = header->width * header->height * 2;
+    printf(".. remains %lu of %lu\n", gsize, st.st_size);
+    xbin_data = tmp = allocate(fsize);
     if (header->flags.flag_compress) {
-        while (!feof(fd)) {
-            ch = fgetc(fd);
-            method = ch & 0xc0;
-            repeat = ch & 0x3f + 1;
-            printf("repeat %d blocks compression %d [0x%02x]\n", repeat, method, ch);
-            printf("method == 0xc0, %d\n", (method == 0xc0));
+        while (fsize && (p - s) < st.st_size) {
+            repeat = *p++;
+            method = (repeat & 0xc0);
+            repeat = (repeat & 0x3f);
 
-            bool read = false;
-            while (repeat--) {
-                if (method == 0x00) {       // No compression
-                    ch = fgetc(fd);
-                    attribute = fgetc(fd);
-                    printf("none %02x %02x\n", ch, attribute);
-                }
-                else if (method == 0x40) {  // Character compression
-                    if (!read) {
-                        ch = fgetc(fd);
-                        read = true;
+            switch (method) {
+                case XBIN_COMP_NONE:
+                    for (i = 0; i < repeat + 1; i++) {
+                        *xbin_data++ = *p++;
+                        *xbin_data++ = *p++;
+                        assert(fsize >= 2);
+                        fsize -= 2;
                     }
-                    attribute = fgetc(fd);
-                    printf("char %02x %02x\n", ch, attribute);
-                }
-                else if (method == 0x80) {  // Attribute compression
-                    if (!read) {
-                        attribute = fgetc(fd);
-                        read = true;
-                    }
-                    ch = fgetc(fd);
-                    printf("attr %02x %02x\n", ch, attribute);
-                }
-                else {                      // Character and attribute compression
-                    if (!read) {
-                        ch = fgetc(fd);
-                        attribute = fgetc(fd);
-                        read = true;
-                    }
-                    printf("both %02x %02x\n", ch, attribute);
-                }
+                    break;
 
-                //printf("%d x %d [%d]\n", x, y, ftell(fd));
-                display->current->bg = (attribute & 0xf0) >> 4;
-                display->current->fg = (attribute & 0x0f);
-                screen_putchar(display, ch, &x, &y);
+                case XBIN_COMP_CHAR:
+                    ch = *p++;
+                    for (i = 0; i < repeat + 1; i++) {
+                        *xbin_data++ = ch;
+                        *xbin_data++ = *p++;
+                        assert(fsize >= 2);
+                        fsize -= 2;
+                    }
+                    break;
+
+                case XBIN_COMP_ATTR:
+                    attribute = *p++;
+                    for (i = 0; i < repeat; ++i) {
+                        *xbin_data++ = *p++;
+                        *xbin_data++ = attribute;
+                        assert(fsize >= 2);
+                        fsize -= 2;
+                    }
+                    break;
+
+                case XBIN_COMP_BOTH:
+                    ch = *p++;
+                    attribute = *p++;
+                    for (i = 0; i < repeat; ++i) {
+                        *xbin_data++ = ch;
+                        *xbin_data++ = attribute;
+                        assert(fsize >= 2);
+                        fsize -= 2;
+                    }
+                    break;
+
+                default:
+                    assert(0);
+                    break;
             }
         }
+        fsize = header->width * header->height * 2;
+        xbin_data = tmp;
     } else {
-        while (!feof(fd)) {
-            ch = fgetc(fd);
-            if (ch == header->eof_char)
-                break;
-            attribute = fgetc(fd);
-            display->current->bg = (attribute & 0xf0) >> 4;
-            display->current->fg = (attribute & 0x0f);
-            screen_putchar(display, ch, &x, &y);
-        }
+        xbin_data = p;
     }
-    printf(".. at %lu\n", ftell(fd));
+
+    if (fsize % 2) {
+        fprintf(stderr, "uneven number of blocks!? [%d/%d]\n", fpos, fsize);
+        assert(0);
+    }
+    while (fsize) {
+        ch = *xbin_data++;
+        attribute = *xbin_data++;
+        screen_putchar_xbin(display, ch, attribute, &x, &y);
+        fsize -= 2;
+    }
+    printf(".. at %lu of %lu (after graphics)\n", p - s, st.st_size);
+
+    munmap(p, st.st_size);
 
     rewind(fd);
     fclose(fd);
 
-    return display;
-}
+    free(header);
 
-void xbin_parser_render(screen *display, unsigned int output_type)
-{
-    
+    return display;
 }
 
 static char *xbin_extensions[] = {
@@ -202,12 +257,14 @@ static char *xbin_extensions[] = {
     "xbin",
     NULL
 };
+
 static parser xbin_parser = {
     "xbin",
     "eXtended Binary",
+    xbin_parser_probe,
     xbin_parser_read,
-    xbin_parser_render,
-    xbin_extensions
+    xbin_extensions,
+    "cp437_8x16"
 };
 
 void xbin_parser_init(void) {

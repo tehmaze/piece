@@ -2,6 +2,7 @@
 #define __SAUCE_H
 
 #include <stdint.h>
+#include "font.h"
 
 #define SAUCE_RECORD_SIZE           128
 #define SAUCE_COMMENT_SIZE          64
@@ -40,21 +41,21 @@ typedef struct sauce_flags_s {
 } sauce_flags;
 
 typedef struct sauce_s {
-    char        id[6];
-    char        version[3];
-    char        title[36];
-    char        author[21];
-    char        group[21];
-    char        date[9];
+    char        id[5];
+    char        version[2];
+    char        title[35];
+    char        author[20];
+    char        group[20];
+    char        date[8];
     int32_t     file_size;
     uint8_t     data_type;
     uint8_t     file_type;
     uint16_t    tinfo[4];
     uint8_t     comments;
     sauce_flags flags;
-    char        filler[23];
+    char        filler[22];
     char        **comment;
-} sauce;
+} __attribute__((packed)) sauce;
 
 typedef enum sauce_ls_e {
     SAUCE_LS_LEGACY,

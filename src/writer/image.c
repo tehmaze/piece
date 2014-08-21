@@ -57,7 +57,7 @@ static void image_save(gdImagePtr image, const char *filename)
         extension[i] = tolower(extension[i]);
     }
 
-    printf("\nsaving %s (type %s)\n", filename, extension);
+    printf("%s: writing %s image\n", filename, extension);
 
     if (!strcmp(extension, "bmp")) {
         free(extension);
@@ -100,7 +100,7 @@ static void image_save(gdImagePtr image, const char *filename)
 
 void image_writer_write(screen *display, const char *filename, font *font)
 {
-    int32_t colors[256], i, j, canvas_back;
+    int32_t colors[256], i, canvas_back;
     uint16_t bits = sauce_flag_letter_spacing(display->record);
     gdImagePtr image_ansi, image_font, image_back;
 
@@ -133,8 +133,9 @@ void image_writer_write(screen *display, const char *filename, font *font)
     }
 
     // Colors for font (and back)
-    printf("setting up %d color palette %s\n", display->palette->colors,
-                                               display->palette->name);
+    printf("%s: setting up %d color palette %s\n", filename,
+                                                   display->palette->colors,
+                                                   display->palette->name);
     for (i = 0; i < display->palette->colors; ++i) {
         colors[i] = gdImageColorAllocate(
             image_font,
@@ -183,14 +184,11 @@ void image_writer_write(screen *display, const char *filename, font *font)
 
     // Print piece onto canvas
     i = 0;
-    for (list_node *node = display->tiles->head;
-         node->next != NULL;
-         node = node->next) {
-
+    for (i = 0; i < display->tiles; ++i) {
         int32_t x = (i % display->width) * bits,
                 y = (i / display->width) * font->h;
 
-        tile *current = (tile *) node->data;
+        screen_tile *current = &display->tile[i];
         //printf("render %c [%u] at %dx%d\n", current->ch, current->ch, x, y);
 
         gdImageCopy(
@@ -211,8 +209,6 @@ void image_writer_write(screen *display, const char *filename, font *font)
             bits,
             font->h
         );
-
-        i++;
     }
 
     image_save(image_ansi, filename);

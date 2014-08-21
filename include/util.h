@@ -1,6 +1,9 @@
 #ifndef __UTIL_H
 #define __UTIL_H
 
+#include <stdint.h>
+#include <stdio.h>
+
 #ifdef UNUSED
 #elif defined(__GNUC__)
 # define UNUSED(x) UNUSED_ ## x __attribute__((unused))
@@ -11,6 +14,8 @@
 #endif
 
 void       *allocate(size_t);
+int16_t     fget16(FILE *fd);
+int32_t     fget32(FILE *fd);
 char       *get_extension(const char *filename);
 int32_t     max32(int32_t a, int32_t b);
 int32_t     min32(int32_t a, int32_t b);

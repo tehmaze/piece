@@ -7,8 +7,13 @@
 #include "font.h"
 #include "list.h"
 #include "palette.h"
-#include "parser/ansi.h"
 #include "parser.h"
+#include "parser/ansi.h"
+#include "parser/artworx.h"
+#include "parser/binary.h"
+#include "parser/icedraw.h"
+#include "parser/pcboard.h"
+#include "parser/tundradraw.h"
 #include "parser/xbin.h"
 #include "sauce.h"
 #include "writer.h"
@@ -69,8 +74,8 @@ void print_writer_list(void)
 bool print_type_list_item(void *item)
 {
     parser *current = item;
-    printf("  %-8s: %s\n", current->name, current->description);
-    printf("            Extensions: ");
+    printf("  \x1b[1;31m%-10s\x1b[0m description: %s\n", current->name, current->description);
+    printf("             extensions:  \x1b[1m");
     for (int i = 0; ; i++) {
         if (current->extensions[i] == NULL) {
             printf("\n");
@@ -78,6 +83,7 @@ bool print_type_list_item(void *item)
         }
         printf("*.%s ", current->extensions[i]);
     }
+    printf("\x1b[0m");
     return true;
 }
 
@@ -120,6 +126,7 @@ void print_usage(FILE *stream, int exit_code, bool long_help)
 
 int main(int argc, char *argv[])
 {
+    FILE *fd = NULL;
     const char* const short_options = "hHvt:f:o:p:w:";
     const struct option long_options[] = {
         {"help",      no_argument,       NULL, 'h'},
@@ -140,12 +147,17 @@ int main(int argc, char *argv[])
     const char *source_typename = "auto";
     const char *target_filename = NULL;
     const char *target_fontname = "cp437_8x16";
-    const char *target_typename = "png";
+    const char *target_typename = "image";
     const char *target_palette  = "vga";
 
     /* Initialize parsers */
     parser_init();
     ansi_parser_init();
+    artworx_parser_init();
+    binary_parser_init();
+    icedraw_parser_init();
+    pcboard_parser_init();
+    tundradraw_parser_init();
     xbin_parser_init();
 
     /* Initialize writers */
@@ -255,9 +267,14 @@ int main(int argc, char *argv[])
         printf("target: %s\n", target_filename);
     }
 
+    if ((fd = fopen(source_filename, "rb")) == NULL) {
+        fprintf(stderr, "%s: error opening input file\n", source_filename);
+        return 1;
+    }
+
     parser *source_parser = NULL;
     if (!strcmp(source_typename, "auto")) {
-        source_parser = parser_for(source_filename);
+        source_parser = parser_for(fd, source_filename);
     } else {
         source_parser = parser_for_type(source_typename);
     }
@@ -266,7 +283,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "%s: no suitable parser found\n", source_filename);
         exit(1);
     } else {
-        printf("%s: using %s parser\n", source_filename, source_parser->name);
+        printf("%s: using %s parser\n", source_filename,
+                                        source_parser->description);
     }
 
     writer *target_writer = writer_for_type(target_typename);
@@ -274,8 +292,6 @@ int main(int argc, char *argv[])
         free(source_parser);
         fprintf(stderr, "%s: no suitable writer found\n", target_filename);
         exit(1);
-    } else {
-        printf("%s: using %s writer\n", target_filename, target_writer->name);
     }
 
     font *target_font = font_by_name(target_fontname);
@@ -287,17 +303,18 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    screen *display = source_parser->read(source_filename);
-    if (display == NULL || display->tiles == NULL) {
+    screen *display = source_parser->read(fd, source_filename);
+    if (display == NULL || display->tiles == 0) {
         free(source_parser);
         free(target_writer);
         fprintf(stderr, "%s: parser failed\n", source_filename);
         exit(1);
     }
-    printf("read %d tiles\n", list_size(display->tiles));
+    printf("%s: read %d tiles\n", source_filename, display->tiles);
     if (display->font != NULL) {
         target_font = display->font;
     }
+    printf("%s: using %s writer\n", target_filename, target_writer->name);
     target_writer->write(display, target_filename, target_font);
 
     screen_free(display);

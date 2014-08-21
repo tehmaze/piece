@@ -14,9 +14,9 @@ typedef struct font_s {
 
 extern list *fonts;
 
-void    font_init(void);
-void    font_free(void);
-void    font_iter(list_iterator);
-font   *font_by_name(const char *);
+void                font_init(void);
+void                font_free(void);
+void                font_iter(list_iterator);
+font /*@null@*/    *font_by_name(const char *);
 
 #endif // __FONT_H
