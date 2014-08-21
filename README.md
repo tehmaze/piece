@@ -12,7 +12,7 @@ Supported file formats:
 * ANSi (.ans), mostly [ECMA-048](http://www.ecma-international.org/publications/standards/Ecma-048.htm) compliant
 * ASCII (.asc, .diz)
 * Artworx (.adf)
-* BIN (.bin, TODO)
+* BIN (.bin)
 * iCE Draw (.idf)
 * PCBoard (.pcb)
 * RIPScript (.rip, TODO)
