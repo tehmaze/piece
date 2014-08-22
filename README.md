@@ -58,6 +58,22 @@ To clean the build root:
     scons -c
 
 
+Installing
+----------
+
+To install everything into ``/usr/local``:
+
+    scons install
+
+
+Uninstalling
+------------
+
+To remove the ``piece`` installation:
+
+    scons uninstall
+
+
 Acknowledgements
 ----------------
 

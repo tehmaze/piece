@@ -57,7 +57,7 @@ target_font = env.Command(
 )
 
 
-target = env.Program(
+sauce = env.Program(
     'sauce',
     [
         'src/list.c',
@@ -67,7 +67,7 @@ target = env.Program(
         'src/mainsauce.c',
     ],
 )
-target = env.Program(
+piece = env.Program(
     'piece',
     [
         'src/list.c',
@@ -84,3 +84,14 @@ target = env.Program(
         'src/main.c',
     ] + generated
 )
+
+prefix = '/usr/local'
+binaries = [piece, sauce]
+for bin in binaries:
+    path = os.path.join(prefix, 'bin')
+    base = str(list(bin)[0])
+    env.Alias('install', env.Install(path, bin))
+    env.Command('uninstall-' + base, os.path.join(path, base), [
+        Delete('$SOURCE'),
+    ])
+    env.Alias('uninstall', 'uninstall-' + base)
