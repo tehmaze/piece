@@ -6,6 +6,7 @@
 
 #include "font.h"
 #include "list.h"
+#include "options.h"
 #include "palette.h"
 #include "parser.h"
 #include "parser/ansi.h"
@@ -17,8 +18,11 @@
 #include "parser/xbin.h"
 #include "sauce.h"
 #include "writer.h"
+#include "util.h"
 #include "writer/image.h"
 #include "writer/text.h"
+
+option_flags *options = NULL;
 
 const char* program_name;
 const char* fontname_default = "cp437_8x16";
@@ -93,7 +97,7 @@ void print_type_list(void)
     parser_iter(print_type_list_item);
 }
 
-void print_usage(FILE *stream, int exit_code, bool long_help)
+void print_usage(FILE *stream, bool long_help)
 {
     fprintf(stream, "%s [<options>] input\n", program_name);
     fprintf(
@@ -120,13 +124,14 @@ void print_usage(FILE *stream, int exit_code, bool long_help)
         fprintf(stream, "\n");
         print_writer_list();
     }
-
-    exit(exit_code);
 }
 
 int main(int argc, char *argv[])
 {
     FILE *fd = NULL;
+    int next_option, status = 0;
+    source_option_flags *source;
+    target_option_flags *target;
     const char* const short_options = "hHvt:f:o:p:w:";
     const struct option long_options[] = {
         {"help",      no_argument,       NULL, 'h'},
@@ -142,13 +147,17 @@ int main(int argc, char *argv[])
         {0, 0, 0, 0} /* sentinel */
     };
 
-    int next_option, verbose = 0;
-    const char *source_filename = NULL;
-    const char *source_typename = "auto";
-    const char *target_filename = NULL;
-    const char *target_fontname = "cp437_8x16";
-    const char *target_typename = "image";
-    const char *target_palette  = "vga";
+    options = allocate(sizeof(option_flags));
+    options->source = source = allocate(sizeof(source_option_flags));
+    options->source->parsername = "auto";
+    options->target = target = allocate(sizeof(target_option_flags));
+    options->target->filename = NULL;
+    options->target->fontname = "cp437_8x16";
+    options->target->writername = "image";
+    options->target->image = allocate(sizeof(image_option_flags));
+    options->target->image->transparent = false;
+    options->target->image->palette = "vga";
+    options->verbose = 0;
 
     /* Initialize parsers */
     parser_init();
@@ -183,145 +192,160 @@ int main(int argc, char *argv[])
                                   NULL);
 
         switch (next_option) {
-            case 'h':
-                print_usage(stdout, 0, false);
-                break;
+        case 'h':
+            print_usage(stdout, false);
+            goto exit_free;
 
-            case 'H':
-                print_usage(stdout, 0, true);
-                break;
+        case 'H':
+            print_usage(stdout, true);
+            goto exit_free;
 
-            case 'v':
-                verbose = 1;
-                break;
+        case 'v':
+            options->verbose++;
+            break;
 
-            case 't':
-                source_typename = optarg;
-                if (!strcmp(source_typename, "list") ||
-                    !strcmp(source_typename, "help")) {
-                    print_type_list();
-                    exit(0);
-                }
-                break;
+        case 't':
+            source->parsername = optarg;
+            if (!strcmp(optarg, "list") ||
+                !strcmp(optarg, "help")) {
+                print_type_list();
+                exit(0);
+            }
+            break;
 
-            case 'f':
-                target_fontname = optarg;
-                if (!strcmp(target_fontname, "list") ||
-                    !strcmp(target_fontname, "help")) {
-                    print_font_list();
-                    exit(0);
-                }
-                break;
+        case 'f':
+            target->fontname = optarg;
+            if (!strcmp(optarg, "list") ||
+                !strcmp(optarg, "help")) {
+                print_font_list();
+                exit(0);
+            }
+            break;
 
-            case 'o':
-                target_filename = optarg;
-                break;
+        case 'o':
+            target->filename = optarg;
+            break;
 
-            case 'p':
-                target_palette = optarg;
-                if (!strcmp(target_palette, "list") ||
-                    !strcmp(target_palette, "help")) {
-                    print_palette_list();
-                    exit(0);
-                }
-                break;
+        case 'p':
+            target->image->palette = optarg;
+            if (!strcmp(optarg, "list") ||
+                !strcmp(optarg, "help")) {
+                print_palette_list();
+                goto exit_free;
+            }
+            break;
 
-            case 'w':
-                target_typename = optarg;
-                if (!strcmp(target_typename, "list") ||
-                    !strcmp(target_typename, "help")) {
-                    print_writer_list();
-                    exit(0);
-                }
-                break;
+        case 'w':
+            target->writername = optarg;
+            if (!strcmp(optarg, "list") ||
+                !strcmp(optarg, "help")) {
+                print_writer_list();
+                goto exit_free;
+            }
+            break;
 
-            case '?':
-                fprintf(stderr, "?: invalid argument\n");
-                print_usage(stderr, 1, false);
+        case -1:
+            break;
 
-            case -1:
-                break;
-
-            default:
-                abort();
+        default:
+            print_usage(stderr, false);
+            status = 1;
+            goto exit_free;
         }
     } while (next_option != -1);
 
     for (int i = optind; i < argc; ++i) {
-        if (source_filename == NULL) {
-            source_filename = argv[i];
+        if (source->filename == NULL) {
+            source->filename = argv[i];
         } else {
             fprintf(stderr, "invalid number of arguments\n");
             fprintf(stderr, "remainder: \"%s\"\n", argv[i]);
-            print_usage(stderr, 1, false);
+            print_usage(stderr, false);
+            status = 1;
+            goto exit_free;
         }
     }
 
-    if (target_filename == NULL || source_filename == NULL) {
+    if (target->filename == NULL ||
+        source->filename == NULL ||
+        !strcmp(target->filename, source->filename)) {
         fprintf(stderr, "both input and output file name required\n");
-        print_usage(stderr, 1, false);
+        status = 1;
+        goto exit_free;
     }
 
-    if (verbose) {
-        printf("source: %s\n", source_filename);
-        printf("target: %s\n", target_filename);
+    dprintf("source: %s\n", source->filename);
+    dprintf("target: %s\n", source->filename);
+
+    if ((fd = fopen(source->filename, "rb")) == NULL) {
+        fprintf(stderr, "%s: error opening input file\n",
+                        source->filename);
+        status = 1;
+        goto exit_free;
     }
 
-    if ((fd = fopen(source_filename, "rb")) == NULL) {
-        fprintf(stderr, "%s: error opening input file\n", source_filename);
-        return 1;
-    }
-
-    parser *source_parser = NULL;
-    if (!strcmp(source_typename, "auto")) {
-        source_parser = parser_for(fd, source_filename);
+    source->parser = NULL;
+    if (!strcmp(source->parsername, "auto")) {
+        source->parser = parser_for(fd, source->filename);
     } else {
-        source_parser = parser_for_type(source_typename);
+        source->parser = parser_for_type(source->parsername);
     }
 
-    if (source_parser == NULL) {
-        fprintf(stderr, "%s: no suitable parser found\n", source_filename);
-        exit(1);
+    if (source->parser == NULL) {
+        fprintf(stderr, "%s: no suitable parser found\n",
+                        source->filename);
+        status = 1;
+        goto exit_close;
     } else {
-        printf("%s: using %s parser\n", source_filename,
-                                        source_parser->description);
+        dprintf("%s: using %s parser\n", source->filename,
+                                         source->parser->description);
     }
 
-    writer *target_writer = writer_for_type(target_typename);
-    if (target_writer == NULL) {
-        free(source_parser);
-        fprintf(stderr, "%s: no suitable writer found\n", target_filename);
-        exit(1);
+    target->writer = writer_for_type(target->writername);
+    if (target->writer == NULL) {
+        fprintf(stderr, "%s: no suitable writer found\n",
+                        target->filename);
+        status = 1;
+        goto exit_close;
     }
 
-    font *target_font = font_by_name(target_fontname);
-    if (target_font == NULL) {
-        free(source_parser);
-        free(target_writer);
-        fprintf(stderr, "%s: unknown font \"%s\"\n", source_filename,
-                                                     target_fontname);
-        exit(1);
+    target->font = font_by_name(target->fontname);
+    if (target->font == NULL) {
+        fprintf(stderr, "%s: unknown font \"%s\"\n",
+                        target->filename,
+                        target->fontname);
+        status = 1;
+        goto exit_close;
     }
 
-    screen *display = source_parser->read(fd, source_filename);
-    if (display == NULL || display->tiles == 0) {
-        free(source_parser);
-        free(target_writer);
-        fprintf(stderr, "%s: parser failed\n", source_filename);
-        exit(1);
+    target->display = source->parser->read(fd, source->filename);
+    if (target->display == NULL || target->display->tiles == 0) {
+        fprintf(stderr, "%s: parser failed\n", source->filename);
+        status = 1;
+        goto exit_free;
     }
-    printf("%s: read %d tiles\n", source_filename, display->tiles);
-    if (display->font != NULL) {
-        target_font = display->font;
+    dprintf("%s: read %d tiles\n", source->filename, target->display->tiles);
+    if (target->display->font != NULL) {
+        target->font = target->display->font;
     }
-    printf("%s: using %s writer\n", target_filename, target_writer->name);
-    target_writer->write(display, target_filename, target_font);
+    dprintf("%s: using %s writer\n", target->filename,
+                                     target->writer->name);
+    target->writer->write(target->display, target->filename, target->font);
 
-    screen_free(display);
-    parser_free();
-    writer_free();
-    font_free();
+exit_close:
+    rewind(fd);
+    fclose(fd);
+
+exit_free:
+    screen_free(target->display);
     palette_free();
+    font_free();
+    writer_free();
+    parser_free();
+    free(options->target->image);
+    free(options->target);
+    free(options->source);
+    free(options);
 
-    return 0;
+    return status;
 }

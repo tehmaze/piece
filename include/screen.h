@@ -36,12 +36,16 @@ typedef struct screen_tile_s {
     uint64_t        attrib;
 } screen_tile;
 
+typedef struct screen_size_s {
+    int32_t         width;
+    int32_t         height;
+} screen_size;
+
 typedef struct screen_s {
     screen_tile     *tile;
     int32_t         tiles;
     uint8_t         *buffer;
-    int32_t         width;
-    int32_t         height;
+    screen_size     size;
     int64_t         cursor;
     screen_tile     *current;
     sauce           *record;

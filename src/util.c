@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include "util.h"
 
 void *allocate(size_t size)
@@ -40,6 +41,16 @@ int32_t max32(int32_t a, int32_t b)
 int32_t min32(int32_t a, int32_t b)
 {
     return (a < b) ? a : b;
+}
+
+double seconds(struct timeval then)
+{
+    struct timeval curr;
+    gettimeofday(&curr, NULL);
+
+    return
+        (curr.tv_sec + ((double) curr.tv_usec / 1000000.0)) -
+        (then.tv_sec + ((double) then.tv_usec / 1000000.0));
 }
 
 int32_t split(char ***array, char delimiter, char *s)

@@ -19,6 +19,7 @@ int32_t     fget32(FILE *fd);
 char       *get_extension(const char *filename);
 int32_t     max32(int32_t a, int32_t b);
 int32_t     min32(int32_t a, int32_t b);
+double      seconds(struct timeval then);
 int32_t     split(char ***array, char delimiter, char *s);
 char       *substr(char *s, size_t start, size_t length);
 

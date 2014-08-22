@@ -24,6 +24,25 @@ static rgb_color ANSI_RGB[16] = {
     {0xff, 0xff, 0xff},     /* white */
 };
 
+static rgb_color BIN_RGB[16] = {
+    {0x00, 0x00, 0x00},
+    {0x00, 0x00, 0xaa},
+    {0x00, 0xaa, 0x00},
+    {0x00, 0xaa, 0xaa},
+    {0xaa, 0x00, 0x00},
+    {0xaa, 0x00, 0xaa},
+    {0xaa, 0x55, 0x00},
+    {0xaa, 0xaa, 0xaa},
+    {0x55, 0x55, 0x55},
+    {0x55, 0x55, 0xff},
+    {0x55, 0xff, 0x55},
+    {0x55, 0xff, 0xff},
+    {0xff, 0x55, 0x55},
+    {0xff, 0x55, 0xff},
+    {0xff, 0xff, 0x55},
+    {0xff, 0xff, 0xff},
+};
+
 static rgb_color PCB_RGB[16] = {
     {0x00, 0x00, 0x00},
     {0x00, 0x00, 0xaa},
@@ -62,7 +81,12 @@ static rgb_color TND_RGB[16] = {
     {0xff, 0xff, 0xff},
 };
 
-palette *AUTO, *EGA_PALETTE, *VGA_PALETTE, *PCB_PALETTE, *TND_PALETTE;
+palette *AUTO,
+    *BIN_PALETTE,
+    *EGA_PALETTE,
+    *PCB_PALETTE,
+    *TND_PALETTE,
+    *VGA_PALETTE;
 list *palettes;
 
 palette *palette_new(char *name, uint16_t colors)
@@ -104,12 +128,14 @@ void palette_init(void)
     list_new(palettes, palette_free_item);
 
     AUTO = palette_new("auto", 0);
+    BIN_PALETTE = palette_new("bin", 16);
     EGA_PALETTE = palette_new("ega", 16);
     PCB_PALETTE = palette_new("pcb", 16);
     TND_PALETTE = palette_new("tnd", 16);
     VGA_PALETTE = palette_new("vga", 256);
 
     for (i = 0; i < 16; i++) {
+        BIN_PALETTE->color[i] = BIN_RGB[i];
         EGA_PALETTE->color[i] = ANSI_RGB[i];
         PCB_PALETTE->color[i] = PCB_RGB[i];
         TND_PALETTE->color[i] = TND_RGB[i];
@@ -136,6 +162,7 @@ void palette_init(void)
     }
 
     list_append(palettes, AUTO);
+    list_append(palettes, BIN_PALETTE);
     list_append(palettes, EGA_PALETTE);
     list_append(palettes, PCB_PALETTE);
     list_append(palettes, TND_PALETTE);

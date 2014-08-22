@@ -2,13 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <gd.h>
 #include "font.h"
+#include "options.h"
 #include "screen.h"
 #include "writer.h"
 #include "writer/image.h"
 #include "palette.h"
 #include "util.h"
+
+static int spinners = 8;
+static char *spinner[] = {
+    "\xe2\xa3\xbe",
+    "\xe2\xa3\xbd",
+    "\xe2\xa3\xbb",
+    "\xe2\xa2\xbf",
+    "\xe2\xa1\xbf",
+    "\xe2\xa3\x9f",
+    "\xe2\xa3\xaf",
+    "\xe2\xa3\xb7"
+};
 
 /* Copy a font glyph to the target image, the resulting image will have all
  * glyphs in all possible palette colors like so:
@@ -53,11 +67,12 @@ static void image_save(gdImagePtr image, const char *filename)
 {
     FILE *fd;
     char *extension = get_extension(filename);
+
     for (int i = strlen(extension) - 1; i > -1; i--) {
         extension[i] = tolower(extension[i]);
     }
 
-    printf("%s: writing %s image\n", filename, extension);
+    dprintf("%s: writing %s image\n", filename, extension);
 
     if (!strcmp(extension, "bmp")) {
         free(extension);
@@ -101,15 +116,17 @@ static void image_save(gdImagePtr image, const char *filename)
 void image_writer_write(screen *display, const char *filename, font *font)
 {
     int32_t colors[256], i, canvas_back;
-    uint16_t bits = sauce_flag_letter_spacing(display->record);
+    uint16_t bits = sauce_flag_letter_spacing(display->record), s, t;
     gdImagePtr image_ansi, image_font, image_back;
+    struct timeval start, now;
+    gettimeofday(&start, NULL);
 
     if (display->palette == NULL) {
         fprintf(stderr, "%s: empty palette selected\n", filename);
         exit(1);
     }
 
-    printf("%s: using %d bit glyphs from font %s\n", filename, bits, font->name);
+    dprintf("%s: using %d bit glyphs from font %s\n", filename, bits, font->name);
 
     image_back = gdImageCreate(
         9 * display->palette->colors,
@@ -119,23 +136,23 @@ void image_writer_write(screen *display, const char *filename, font *font)
         font->w * 256,
         font->h * display->palette->colors
     );
-    image_ansi = gdImageCreate(bits * display->width,
-                               font->h * display->height);
+    image_ansi = gdImageCreate(bits * display->size.width,
+                               font->h * display->size.height);
 
     if (image_back == NULL ||
         image_font == NULL ||
         image_ansi == NULL) {
         fprintf(stderr, "%s: out of memory trying to create %dx%d image\n",
                         filename,
-                        bits * display->width,
-                        font->h * display->height);
+                        bits * display->size.width,
+                        font->h * display->size.height);
         exit(1);
     }
 
     // Colors for font (and back)
-    printf("%s: setting up %d color palette %s\n", filename,
-                                                   display->palette->colors,
-                                                   display->palette->name);
+    dprintf("%s: setting up %d color palette %s\n", filename,
+                                                    display->palette->colors,
+                                                    display->palette->name);
     for (i = 0; i < display->palette->colors; ++i) {
         colors[i] = gdImageColorAllocate(
             image_font,
@@ -148,6 +165,7 @@ void image_writer_write(screen *display, const char *filename, font *font)
     gdImageColorTransparent(image_font, 255);
     gdImagePaletteCopy(image_back, image_font);
     canvas_back = gdImageColorAllocate(image_ansi, 0, 0, 0);
+    dprintf("%s: .. it took %.03fs\n", filename, seconds(start));
 
     // Font background is transparent
     gdImageFilledRectangle(
@@ -166,6 +184,11 @@ void image_writer_write(screen *display, const char *filename, font *font)
     }
 
     // Render font bitmaps
+    dprintf("%s: setting up %d character %dx%d font\n", filename,
+                                                        font->l,
+                                                        font->w,
+                                                        font->h);
+    gettimeofday(&now, NULL);
     for (int32_t fg = 0; fg < display->palette->colors; ++fg) {
         for (uint32_t ch = 0; ch < 256; ++ch) {
             image_fontcpy(image_font, font, bits, fg, ch);
@@ -181,35 +204,107 @@ void image_writer_write(screen *display, const char *filename, font *font)
             i
         );
     }
+    dprintf("%s: .. it took %.03fs\n", filename, seconds(now));
 
     // Print piece onto canvas
+    dprintf("%s: rendering %d tiles on canvas\n", filename, display->tiles);
+    gettimeofday(&now, NULL);
     i = 0;
+    s = 0;
+    t = 0;
     for (i = 0; i < display->tiles; ++i) {
-        int32_t x = (i % display->width) * bits,
-                y = (i / display->width) * font->h;
+        int32_t dst_x = (i % display->size.width) * bits,
+                dst_y = (i / display->size.width) * font->h;
 
         screen_tile *current = &display->tile[i];
-        //printf("render %c [%u] at %dx%d\n", current->ch, current->ch, x, y);
 
-        gdImageCopy(
-            image_ansi,
-            image_back,
-            x, y,
-            current->bg * 9,
-            0,
-            bits,
-            font->h
-        );
-        gdImageCopy(
-            image_ansi,
-            image_font,
-            x, y,
-            current->ch * bits,
-            current->fg * font->h,
-            bits,
-            font->h
-        );
+        int16_t src_x = current->ch * bits,
+                src_y = current->fg * font->h;
+
+        if (current->bg > 0) {
+            gdImageCopy(
+                image_ansi,
+                image_back,
+                dst_x, dst_y,
+                src_x, 0,
+                bits,
+                font->h
+            );
+        }
+
+        if (current->attrib & ATTRIB_ITALICS) {
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x + 3, dst_y,
+                src_x, src_y,
+                bits,
+                2
+            );
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x + 2, dst_y + 2,
+                src_x, src_y + 2,
+                bits,
+                4
+            );
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x + 1, dst_y + 6,
+                src_x, src_y + 6,
+                bits,
+                4
+            );
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x, dst_y + 10,
+                src_x, src_y + 10,
+                bits,
+                4
+            );
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x - 1, dst_y + 14,
+                src_x, src_y + 14,
+                bits,
+                2
+            );
+
+        } else {
+            gdImageCopy(
+                image_ansi,
+                image_font,
+                dst_x, dst_y,
+                src_x, src_y,
+                bits,
+                font->h
+            );
+        }
+
+        if (current->attrib & ATTRIB_UNDERLINE) {
+            
+        }
+
+        if (!(i % 80)) {
+            t = (int) (seconds(now) * 4);
+            if (t > s) {
+                double perc = (i / (double) display->tiles) * 100.0;
+                printf("\r%s: .. still busy, at %.02f%% %s", filename,
+                                                             perc,
+                                                             spinner[t % spinners]);
+                fflush(stdout);
+                s = t;
+            }
+        }
     }
+    if (t != 0) {
+        printf("\r");
+    }
+    dprintf("%s: .. it took %.03fs           \n", filename, seconds(now));
 
     image_save(image_ansi, filename);
     //image_save(image_back, filename);

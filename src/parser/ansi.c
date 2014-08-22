@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "list.h"
+#include "options.h"
 #include "parser.h"
 #include "parser/ansi.h"
 #include "palette.h"
@@ -257,14 +258,14 @@ screen *ansi_parser_read(FILE *fd, const char *filename)
 
                             switch (i) {
                                 case 0:     // From cursor to EOF
-                                    for (i = (display->width * y) + x;
+                                    for (i = (display->size.width * y) + x;
                                          i < display->tiles; ++i) {
                                          screen_tile_reset(&display->tile[i]);
                                     }
                                     break;
 
                                 case 1:     // From cursor to start
-                                    for (i = (display->width * y) + x;
+                                    for (i = (display->size.width * y) + x;
                                          i >= 0; --i) {
                                          screen_tile_reset(&display->tile[i]);
                                     }
@@ -287,16 +288,16 @@ screen *ansi_parser_read(FILE *fd, const char *filename)
                             int64_t start, end;
                             switch (i) {
                                 case 0:     // To EOL
-                                    start = (display->width * y) + x;
-                                    end = (display->width * (y + 1)) - 1;
+                                    start = (display->size.width * y) + x;
+                                    end = (display->size.width * (y + 1)) - 1;
                                     break;
                                 case 1:     // To BOL
-                                    start = (display->width * (y - 1)) + 1;
-                                    end = (display->width * y) + x;
+                                    start = (display->size.width * (y - 1)) + 1;
+                                    end = (display->size.width * y) + x;
                                     break;
                                 case 2:     // Entire line
-                                    start = (display->width * (y - 1)) + 1;
-                                    end = (display->width * (y + 1)) - 1;
+                                    start = (display->size.width * (y - 1)) + 1;
+                                    end = (display->size.width * (y + 1)) - 1;
                                     break;
                             }
 
@@ -404,11 +405,8 @@ screen *ansi_parser_read(FILE *fd, const char *filename)
         }
     }
 
-    list_free(sequences);
-
     // We're done here
-    rewind(fd);
-    fclose(fd);
+    list_free(sequences);
 
     return display;
 }

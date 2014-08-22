@@ -12,6 +12,7 @@ env = Environment(
     CC='clang',
     CCFLAGS=[
         '-g',
+        #'-pg',
         '-std=c99',
         '-Wall',
         '-Wextra',
@@ -20,6 +21,9 @@ env = Environment(
         '-D_GNU_SOURCE',
     ],
     CPPPATH='include',
+    LINKFLAGS=[
+        #'-pg',
+    ],
 )
 cfg = Configure(env)
 if not env.GetOption('clean'):

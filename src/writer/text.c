@@ -16,10 +16,10 @@ void text_writer_write(screen *display, const char *filename, font *UNUSED(font)
     }
 
     printf("%s: writing %d tiles\n", filename, display->tiles);
-    printf("%s: %dx%d\n", filename, display->width, display->height);
+    printf("%s: %dx%d\n", filename, display->size.width, display->size.height);
 
     for (int32_t i = 0; i < display->tiles; ++i) {
-        if (i > 0 && i % display->width == 0) {
+        if (i > 0 && i % display->size.width == 0) {
             fputs("\r\n", fd);
         }
         screen_tile *current = &display->tile[i];
