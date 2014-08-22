@@ -1,5 +1,8 @@
 # Generated sources
 src/font.c
+bin/
+build/
+lib/
 
 # Object files
 *.o
@@ -27,3 +30,6 @@ src/font.c
 # Debug files
 core.*
 vgcore.*
+
+# SConstruct
+.scon*

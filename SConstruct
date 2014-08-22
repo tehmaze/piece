@@ -8,6 +8,7 @@ required_headers = (
 required_libs = (
     ('gd', 'gd.h'),
 )
+VariantDir('build', 'src', duplicate=0)
 env = Environment(
     CC='clang',
     CCFLAGS=[
@@ -26,7 +27,10 @@ env = Environment(
     ],
 )
 cfg = Configure(env)
-if not env.GetOption('clean'):
+if env.GetOption('clean'):
+    Delete('bin')
+    Delete('lib')
+else:
     for header in required_headers:
         if not cfg.CheckCHeader(header):
             print 'Did not find {0}'.format(header)
@@ -52,46 +56,68 @@ def build_font_c(target, source, env):
 
 target_font = env.Command(
     source=Glob('font/*.hex'),
-    target='src/font.c',
+    target='src/piece/font.c',
     action=build_font_c,
 )
 
 
+sauce_src = [
+    'build/sauce/sauce.c',
+]
 sauce = env.Program(
-    'sauce',
-    [
-        'src/list.c',
-        'src/util.c',
-        'src/font_base.c',
-        'src/sauce.c',
-        'src/mainsauce.c',
-    ],
+    'bin/sauce',
+    sauce_src + ['build/sauce/main.c'],
 )
-piece = env.Program(
-    'piece',
-    [
-        'src/list.c',
-        'src/util.c',
-        'src/sauce.c',
-        'src/screen.c',
-        'src/palette.c',
-        'src/parser.c',
-        Glob('src/parser/*.c'),
-        'src/writer.c',
-        Glob('src/writer/*.c'),
-        target_font,
-        'src/font_base.c',
-        'src/main.c',
-    ] + generated
+libsauce = env.SharedLibrary(
+    'lib/sauce',
+    sauce_src,
+)
+libsauce_static = env.StaticLibrary(
+    'lib/sauce',
+    sauce_src,
 )
 
-prefix = '/usr/local'
-binaries = [piece, sauce]
-for bin in binaries:
-    path = os.path.join(prefix, 'bin')
-    base = str(list(bin)[0])
-    env.Alias('install', env.Install(path, bin))
-    env.Command('uninstall-' + base, os.path.join(path, base), [
-        Delete('$SOURCE'),
-    ])
-    env.Alias('uninstall', 'uninstall-' + base)
+piece_src = [
+    'build/sauce/sauce.c',
+    'build/piece/list.c',
+    'build/piece/util.c',
+    'build/piece/screen.c',
+    'build/piece/palette.c',
+    'build/piece/sauce.c',
+    'build/piece/parser.c',
+    Glob('build/piece/parser/*.c'),
+    'build/piece/writer.c',
+    Glob('build/piece/writer/*.c'),
+    target_font,
+    'build/piece/font_base.c',
+] + generated
+piece = env.Program(
+    'bin/piece',
+    piece_src + ['build/piece/main.c'],
+)
+libpiece = env.SharedLibrary(
+    'lib/piece',
+    piece_src,
+)
+libpiece_static = env.StaticLibrary(
+    'lib/piece',
+    piece_src,
+)
+
+if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
+    prefix = '/usr/local'
+    targets = [
+        ('bin', piece),
+        ('bin', sauce),
+        ('lib', libsauce),
+        ('lib', libsauce_static),
+        ('include', ['include/sauce.h']),
+    ]
+    for typ, item in targets:
+        path = os.path.join(prefix, typ)
+        base = os.path.basename(str(list(item)[0]))
+        env.Alias('install', env.Install(path, item))
+        env.Command('uninstall-' + base, os.path.join(path, base), [
+            Delete('$SOURCE'),
+        ])
+        env.Alias('uninstall', 'uninstall-' + base)

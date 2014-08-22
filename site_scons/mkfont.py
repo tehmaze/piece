@@ -28,8 +28,7 @@ def convert(filename, stream=sys.stdout):
         for comment in comments:
             stream.write('// {0}\n'.format(comment))
         stream.write('\n')
-    stream.write('const unsigned char {0}_font_glyphs[{t}] = {{\n'.format(
-    #stream.write('static unsigned char **{0}_font_glyphs[] = {{\n'.format(
+    stream.write('const unsigned char piece_{0}_font_glyphs[{t}] = {{\n'.format(
         fontname,
         l=l,
         h=h,
@@ -44,10 +43,10 @@ def convert(filename, stream=sys.stdout):
             stream.write(',')
         stream.write('\n')
     stream.write('};\n\n')
-    stream.write('static font {0}_font = {{\n'.format(fontname))
+    stream.write('static piece_font piece_{0}_font = {{\n'.format(fontname))
     stream.write('    "{0}",\n'.format(fontname))
     stream.write('    {w},\n    {h},\n    {l},\n'.format(w=w, h=h, l=l))
-    stream.write('    {0}_font_glyphs\n'.format(fontname))
+    stream.write('    piece_{0}_font_glyphs\n'.format(fontname))
     stream.write('};\n\n')
 
     return fontname
@@ -57,18 +56,18 @@ def convert_to(sources, target):
     with open(target, 'w') as handle:
         handle.write('/* This file is generated, do not modify */\n\n')
         handle.write('/* Splint directives */\n/*@+charint@*/\n\n')
-        handle.write('#include <stdlib.h>\n')
-        handle.write('#include "font.h"\n\n')
-        handle.write('#include "util.h"\n\n')
+        handle.write('#include <stdlib.h>\n\n')
+        handle.write('#include "piece/font.h"\n')
+        handle.write('#include "piece/util.h"\n\n')
         fontnames = []
         for source in sources:
             fontnames.append(convert(str(source), handle))
 
-        handle.write('void font_init(void) {\n')
-        handle.write('    fonts = allocate(sizeof(list));\n');
-        handle.write('    list_new(fonts, NULL);\n')
+        handle.write('void piece_font_init(void) {\n')
+        handle.write('    piece_fonts = piece_allocate(sizeof(piece_list));\n');
+        handle.write('    piece_list_new(piece_fonts, NULL);\n')
         for fontname in fontnames:
-            handle.write('    list_append(fonts, &{0}_font);\n'.format(fontname))
+            handle.write('    piece_list_append(piece_fonts, &piece_{0}_font);\n'.format(fontname))
         handle.write('}\n\n')
 
 

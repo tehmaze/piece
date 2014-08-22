@@ -1,8 +1,8 @@
 #ifndef __SAUCE_H
 #define __SAUCE_H
 
+#include <stdbool.h>
 #include <stdint.h>
-#include "font.h"
 
 #define SAUCE_RECORD_SIZE           128
 #define SAUCE_COMMENT_SIZE          64
@@ -71,13 +71,11 @@ typedef enum sauce_ar_e {
     SAUCE_AR_INVALID
 } sauce_ar_t;
 
-sauce  *sauce_read(FILE *fd);
-void    sauce_read_comments(FILE *fd, char **comment, int32_t comments);
-void    sauce_free(sauce *record);
-bool    sauce_flag_non_blink(sauce *record);
-uint8_t sauce_flag_letter_spacing(sauce *record);
-font   *sauce_font(sauce *record);
-size_t  sauce_size(sauce *record);
-void    sauce_init(void);
+sauce       *sauce_read(FILE *fd);
+void        sauce_read_comments(FILE *fd, char **comment, int32_t comments);
+void        sauce_free(sauce *record);
+bool        sauce_flag_non_blink(sauce *record);
+uint8_t     sauce_flag_letter_spacing(sauce *record);
+size_t      sauce_size(sauce *record);
 
 #endif // __SAUCE_H
