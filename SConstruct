@@ -83,9 +83,7 @@ env_sauce.Append(
 source_hex = [
     Glob('build/piece/font/hex/*.hex'),
 ] + [
-    env.Fontpng2hex(png) for png in [
-        Glob('build/piece/font/png/*.png'),
-    ] + [
+    env.Fontpng2hex(png) for png in Glob('build/piece/font/png/*.png') + [
         env.Fontb642png(b64) for b64 in Glob('build/piece/font/b64/*.b64')
     ]
 ]
