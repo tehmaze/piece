@@ -1,0 +1,101 @@
+#!/usr/bin/env python2
+
+import os
+import sys
+import re
+from PIL import Image
+
+
+RE_SIZE = re.compile(r'-(\d+)x(\d+)\.png$', re.I)
+
+
+def load_image(filename):
+    image = Image.open(filename)
+    if image.mode != '1':
+        image = image.convert('1')
+
+    return image
+
+
+def to_hex(image, option):
+    width, height = image.size
+    pixels = image.load()
+
+    if height != option.char_height:
+        print >>sys.stderr, \
+            'warning: char height %d does not match image height %d' % (
+                option.char_height,
+                height,
+            )
+        option.char_height = min(option.char_height, height)
+
+    glyphs, remains = divmod(width, option.char_width)
+    if remains:
+        print >>sys.stderr, \
+            'warning: char width %d results in %d remaining pixels per row!' % (
+                option.char_width,
+                remains,
+            )
+
+    if glyphs % 128:
+        print >>sys.stderr, \
+            'warning: char width %d results in odd number of glyphs %d' % (
+                option.char_width,
+                glyphs,
+            )
+
+    if glyphs > 256:
+        print >>sys.stderr, \
+            'warning: char width %d results in more than 256 glyphs, we got %d' % (
+                option.char_width,
+                glyphs,
+            )
+
+    output = []
+    output.append('# Width: %d' % (option.char_width,))
+    output.append('# Height: %d' % (option.char_height,))
+    for i in range(glyphs):
+        o = i * option.char_width
+        glyph = []
+        for y in range(option.char_height):
+            row = ''.join([
+                '1' if pixels[(o + x, y)] > 127 else '0'
+                for x in range(option.char_width)
+            ])
+            glyph.append('%02x' % (int(row, 2),))
+        output.append('%04x:%s' % (i, ''.join(glyph)))
+    output.append('# Converted from %s' % (os.path.basename(option.filename),))
+    return '\n'.join(output)
+
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-x', '--char-width', default=0, type=int,
+        help='Character pixel width (default: 8)',
+    )
+    parser.add_argument(
+        '-y', '--char-height', default=0, type=int,
+        help='Character pixel height (default: 16)',
+    )
+    parser.add_argument('filename')
+    option = parser.parse_args()
+
+    if option.char_width == 0 or option.char_height == 0:
+        test = RE_SIZE.search(option.filename)
+        if test:
+            option.char_width = int(test.group(1))
+            option.char_height = int(test.group(2))
+        else:
+            option.char_width = 8
+            option.char_height = 16
+
+    image = load_image(option.filename)
+    print to_hex(image, option)
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(run())
