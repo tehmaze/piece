@@ -1,5 +1,5 @@
 # Generated sources
-src/font.c
+src/piece/font.c
 bin/
 build/
 lib/
@@ -16,6 +16,7 @@ lib/
 
 # Shared objects
 *.dll
+*.os
 *.so
 *.so.*
 *.dylib

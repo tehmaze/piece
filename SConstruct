@@ -8,12 +8,10 @@ required_headers = (
 required_libs = (
     ('gd', 'gd.h'),
 )
-VariantDir('build', 'src', duplicate=0)
 env = Environment(
     CC='clang',
     CCFLAGS=[
         '-g',
-        #'-pg',
         '-std=c99',
         '-Wall',
         '-Wextra',
@@ -23,9 +21,36 @@ env = Environment(
     ],
     CPPPATH='include',
     LINKFLAGS=[
-        #'-pg',
     ],
 )
+env.Append(
+    BUILDERS={
+        'Fontb642png': Builder(
+            action='contrib/b642png -o $TARGET $SOURCE',
+            suffix='.png',
+            src_suffix='.b64',
+        ),
+        'Fontpng2hex': Builder(
+            action='contrib/png2hex $SOURCE > $TARGET',
+            suffix='.hex',
+            src_suffix='.png',
+        ),
+    }
+)
+env.VariantDir('build', 'src')
+
+if ARGUMENTS.get('VERBOSE') != '1':
+    env.Append(
+        ARCOMSTR     = '\x1b[1;32marchive\x1b[0m $TARGET',
+        CCCOMSTR     = '\x1b[1;33mcompile\x1b[0m $TARGET',
+        CXXCOMSTR    = '\x1b[1;33mcompile\x1b[0m $TARGET',
+        LINKCOMSTR   = '\x1b[1;35mlinking\x1b[0m $TARGET',
+        RANLIBCOMSTR = '\x1b[1;32mranlib \x1b[0m $TARGET',
+        SHCCCOMSTR   = '\x1b[1;33mcompile\x1b[0m $TARGET',
+        SHLINKCOMSTR = '\x1b[1;35mlinking\x1b[0m $TARGET',
+    )
+
+
 cfg = Configure(env)
 if env.GetOption('clean'):
     Delete('bin')
@@ -45,7 +70,25 @@ else:
                 print 'Did not find lib{0}.a or {0}.lib'.format(name)
                 Exit(1)
 
+    env.ParseConfig('pkg-config --cflags --libs gdlib')
+
 env = cfg.Finish()
+env_sauce = env.Clone()
+env_sauce.Append(
+    LINKFLAGS=['-lsauce'],
+)
+
+# Build .png from .b64
+# Build .hex from .png
+source_hex = [
+    Glob('build/piece/font/hex/*.hex'),
+] + [
+    env.Fontpng2hex(png) for png in [
+        Glob('build/piece/font/png/*.png'),
+    ] + [
+        env.Fontb642png(b64) for b64 in Glob('build/piece/font/b64/*.b64')
+    ]
+]
 
 generated = []
 
@@ -55,8 +98,8 @@ def build_font_c(target, source, env):
 
 
 target_font = env.Command(
-    source=Glob('font/*.hex'),
-    target='src/piece/font.c',
+    source=source_hex,
+    target='build/piece/font.c',
     action=build_font_c,
 )
 
@@ -64,9 +107,9 @@ target_font = env.Command(
 sauce_src = [
     'build/sauce/sauce.c',
 ]
-sauce = env.Program(
+sauce = env_sauce.Program(
     'bin/sauce',
-    sauce_src + ['build/sauce/main.c'],
+    ['build/sauce/main.c'],
 )
 libsauce = env.SharedLibrary(
     'lib/sauce',
@@ -107,17 +150,26 @@ libpiece_static = env.StaticLibrary(
 if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
     prefix = '/usr/local'
     targets = [
-        ('bin', piece),
-        ('bin', sauce),
-        ('lib', libsauce),
-        ('lib', libsauce_static),
-        ('include', ['include/sauce.h']),
+        ('bin', piece, []),
+        ('bin', sauce, []),
+        ('lib', libpiece, []),
+        ('lib', libpiece_static, []),
+        ('lib', libsauce, []),
+        ('lib', libsauce_static, []),
+        ('include', ['include/piece.h'], []),
+        ('include', Glob('include/piece/*.h'), ['piece']),
+        ('include', ['include/sauce.h'], []),
     ]
-    for typ, item in targets:
-        path = os.path.join(prefix, typ)
-        base = os.path.basename(str(list(item)[0]))
-        env.Alias('install', env.Install(path, item))
-        env.Command('uninstall-' + base, os.path.join(path, base), [
-            Delete('$SOURCE'),
-        ])
-        env.Alias('uninstall', 'uninstall-' + base)
+    for typ, item, subs in targets:
+        dirs = [prefix]
+        dirs.append(typ)
+        dirs.extend(subs)
+        path = os.path.join(*tuple(dirs))
+        if 'install' in COMMAND_LINE_TARGETS:
+            env.Alias('install', env.Install(path, item))
+        for base in list(item):
+            base = os.path.basename(str(base))
+            env.Command('uninstall-' + base, os.path.join(path, base), [
+                Delete('$SOURCE'),
+            ])
+            env.Alias('uninstall', 'uninstall-' + base)

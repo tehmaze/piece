@@ -14,10 +14,28 @@ const char* palette_default = "auto";
 
 bool print_font_piece_list_item(void *item)
 {
-    piece_font *current = item;
-    printf("  %s", current->name);
-    if (!strcmp(current->name, fontname_default)) {
-        printf(" (default)");
+    piece_font *font = item;
+    char **alias = NULL;
+    uint32_t aliases = 0, i;
+    printf("  %s", font->name);
+    if (font->aliases) {
+        for (i = 0; i < font->aliases; ++i) {
+            if (font->alias[i]->listed) {
+                alias = realloc(alias, (aliases + 1) * sizeof(char *));
+                alias[aliases++] = (char *) font->alias[i]->alias;
+            }
+        }
+    }
+    if (aliases > 0) {
+        printf(" (");
+        for (i = 0; i < aliases; ++i) {
+            printf("%s", alias[i]);
+            if (i != aliases - 1) {
+                printf(", ");
+            }
+        }
+        printf(")");
+        free(alias);
     }
     printf("\n");
     return true;

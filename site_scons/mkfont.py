@@ -21,7 +21,7 @@ def convert(filename, stream=sys.stdout):
             elif line.startswith('#'):
                 comments.append(line[1:].strip())
             else:
-                glyphs.append(line.split(':')[1].decode('hex'))
+                glyphs.extend(line.split(':')[1].decode('hex'))
 
     l = len(glyphs)
     if comments:
@@ -35,18 +35,20 @@ def convert(filename, stream=sys.stdout):
         t=l * h,
     ))
     as_hex = lambda c: '0x%02x' % (ord(c),)
-    for i, glyph in enumerate(glyphs):
+    last = (len(glyphs) // 12) * 12
+    for i in range(0, len(glyphs), 12):
         stream.write('    {0}'.format(
-            ', '.join(map(as_hex, glyph)),
+            ', '.join(map(as_hex, glyphs[i:i + 12])),
         ))
-        if i != (l - 1):
+        if i != last:
             stream.write(',')
         stream.write('\n')
     stream.write('};\n\n')
     stream.write('static piece_font piece_{0}_font = {{\n'.format(fontname))
     stream.write('    "{0}",\n'.format(fontname))
     stream.write('    {w},\n    {h},\n    {l},\n'.format(w=w, h=h, l=l))
-    stream.write('    piece_{0}_font_glyphs\n'.format(fontname))
+    stream.write('    piece_{0}_font_glyphs,\n'.format(fontname))
+    stream.write('    0,\n    NULL\n')
     stream.write('};\n\n')
 
     return fontname
@@ -65,9 +67,11 @@ def convert_to(sources, target):
 
         handle.write('void piece_font_init(void) {\n')
         handle.write('    piece_fonts = piece_allocate(sizeof(piece_list));\n');
-        handle.write('    piece_list_new(piece_fonts, NULL);\n')
+        handle.write('    piece_list_new(piece_fonts, piece_font_free_item);\n')
         for fontname in fontnames:
-            handle.write('    piece_list_append(piece_fonts, &piece_{0}_font);\n'.format(fontname))
+            handle.write('    piece_list_append(piece_fonts, &piece_{0}_font);\n'
+                         .format(fontname))
+        handle.write('   piece_font_init_alias();\n')
         handle.write('}\n\n')
 
 
