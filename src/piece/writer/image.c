@@ -223,14 +223,13 @@ void image_writer_write(piece_screen *display, const char *filename,
         int16_t src_x = current->ch * bits,
                 src_y = current->fg * font->h;
 
-        if (current->bg > 0) {
+        if (current->bg != 0) {
             gdImageCopy(
                 image_ansi,
                 image_back,
                 dst_x, dst_y,
-                src_x, 0,
-                bits,
-                font->h
+                current->bg * 9, 0,
+                bits, font->h
             );
         }
 
@@ -240,40 +239,35 @@ void image_writer_write(piece_screen *display, const char *filename,
                 image_font,
                 dst_x + 3, dst_y,
                 src_x, src_y,
-                bits,
-                2
+                bits, 2
             );
             gdImageCopy(
                 image_ansi,
                 image_font,
                 dst_x + 2, dst_y + 2,
                 src_x, src_y + 2,
-                bits,
-                4
+                bits, 4
             );
             gdImageCopy(
                 image_ansi,
                 image_font,
                 dst_x + 1, dst_y + 6,
                 src_x, src_y + 6,
-                bits,
-                4
+                bits, 4
             );
             gdImageCopy(
                 image_ansi,
                 image_font,
                 dst_x, dst_y + 10,
                 src_x, src_y + 10,
-                bits,
-                4
+                bits, 4
             );
             gdImageCopy(
                 image_ansi,
                 image_font,
                 dst_x - 1, dst_y + 14,
                 src_x, src_y + 14,
-                bits,
-                2
+                bits, 2
             );
 
         } else {
@@ -282,8 +276,7 @@ void image_writer_write(piece_screen *display, const char *filename,
                 image_font,
                 dst_x, dst_y,
                 src_x, src_y,
-                bits,
-                font->h
+                bits, font->h
             );
         }
 
