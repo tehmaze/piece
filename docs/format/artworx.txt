@@ -1,0 +1,23 @@
+.ADF - ARTWORX DATA FORMAT                                              [7.2]
+
+The .ADF specification is a essentially a single file which contains VGA font
+data, the RGB registers for the text palette (registers 0-63), and an
+unlimited amount of binary screen data.  It is intended primarily for
+programmers who would like to add a unique look to any textmode program.
+
+The control structure for the .ADF file is simple:
+
+    BYTE                  : Version #
+    Array of BYTES [192]  : Binary Palette Data in 3-byte triplets.  These
+                            values correspond to the RGB data passed to
+                            the VGA card.
+    Array of BYTES [4096] : VGA Font Data.  Regardless of the screen mode, 
+                            4096 bytes is written to the file.  This is the
+                            binary data passed to the VGA card to generate
+                            fonts.
+    Array of BYTES [....] : (Unknown/Undefined Size) Screen Data.  This is
+                            the actual screen data in the binary, two-byte
+                            (character/attribute) format.  This data can
+                            be directly copied to the screen and should not
+                            go through the bios or console.
+
