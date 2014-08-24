@@ -1,14 +1,11 @@
-piece-c
-=======
+# piece-c
 
 Fast, feature-rich Artscene render engine
 
 
-Features
-========
+# Features
 
-Supported file formats
-----------------------
+## Supported file formats
 
 * ANSi (.ans), mostly [ECMA-048](http://www.ecma-international.org/publications/standards/Ecma-048.htm) compliant
 * ASCII (.asc, .diz)
@@ -21,10 +18,9 @@ Supported file formats
 * XBIN (.xb), fully [Acid XBIN](http://www.acid.org/info/xbin/xbin.htm) compliant
 
 
-Supported pixel fonts
----------------------
+## Supported pixel fonts
 
-*MS-DOS ("OEM") fonts*
+### MS-DOS ("OEM") fonts
 
 Font                  | Description
 --------------------- | ------------------------------------------------------
@@ -47,7 +43,7 @@ cp866u                | MS-DOS Ukrainian
 cp869                 | MS-DOS Greek 2
 cp1251                | MS-DOS Slavic
 
-*Amiga fonts*
+### Amiga fonts
 
 Font                  | Description
 --------------------- | ------------------------------------------------------
@@ -62,7 +58,7 @@ topazplus_a500        | Amiga Topaz 1 enhanced version
 topaz_a1200           | Amiga Topaz 2 (A600, A1200, A4000)
 topazplus_a1200       | Amiga Topaz 2 enhanced version
 
-*Atari fonts*
+### Atari fonts
 
 Font                  | Description
 --------------------- | ------------------------------------------------------
@@ -70,7 +66,7 @@ atascii_arabic        | Atari ATASCII Arabic
 atascii_graphics      | Atari ATASCII Graphics
 atascii_international | Atari ATASCII International
 
-*Commodore 64*
+### Commodore 64
 
 Font                  | Description
 --------------------- | ------------------------------------------------------
@@ -78,15 +74,13 @@ petscii               | Commodore 64 PETSCII (unshifted)
 petscii_shifted       | Commodore 64 PETSCII (shifted)
 
 
-Supported output formats
-------------------------
+## Supported output formats
 
 * Text (plain text)
 * Image (bmp, gif, jpeg, png)
 
 
-Requirements
-============
+# Requirements
 
 You need the following to compile ``piece``:
 
@@ -95,8 +89,7 @@ You need the following to compile ``piece``:
 * [Python](http://python.org/)
 
 
-Building
---------
+# Building
 
 To compile everything from source:
 
@@ -107,27 +100,23 @@ To clean the build root:
     scons -c
 
 
-Installing
-----------
+# Installing
 
 To install everything into ``/usr/local``:
 
     scons install
 
 
-Uninstalling
-------------
+# Uninstalling
 
 To remove the ``piece`` installation:
 
     scons uninstall
 
 
-Acknowledgements
-----------------
+# Acknowledgements
 
 Inspired by the [Ansilove](http://ansilove.sourceforge.net/) ANSi to PNG
 converter, the first version of ``piece`` was written in Python. Because we
 required more speed, the Python version was ported to pure C and lots of
 feauters and font sets were added.
-
