@@ -1,0 +1,59 @@
+#!/usr/bin/env python2
+# Port of bin2hex by The FreeBSD Foundation
+# Copyright (c) 2013 The FreeBSD Foundation
+
+
+import math
+import re
+
+
+RE_SIZE = re.compile(r'-(\d+)x(\d+)\.png$', re.I)
+
+
+def convert_bin(src, dst, option):
+    dst.write('# Width: %d\n' % (option.char_width,))
+    dst.write('# Height: %d\n' % (option.char_height,))
+
+    char_width_bytes = int(math.ceil(float(option.char_width) / 8.0))
+    char_bytes = char_width_bytes * option.char_height
+
+    binary = bytearray(src.read())
+    for i, o in enumerate(xrange(0, len(binary), char_bytes)):
+        hexlets = ['%02x' % byte for byte in binary[o:o + char_bytes]]
+        dst.write('%04x:%s\n' % (i, ''.join(hexlets)))
+
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument(
+        '-x', '--char-width', default=0, type=int,
+        help='Character pixel width (default: 8)',
+    )
+    parser.add_argument(
+        '-y', '--char-height', default=0, type=int,
+        help='Character pixel height (default: 16)',
+    )
+    parser.add_argument('filename')
+
+    option = parser.parse_args()
+
+    if option.char_width == 0 or option.char_height == 0:
+        test = RE_SIZE.search(option.filename)
+        if test:
+            option.char_width = int(test.group(1))
+            option.char_height = int(test.group(2))
+        else:
+            option.char_width = 8
+            option.char_height = 16
+
+    with open(option.filename, 'r') as src:
+        with open(option.output, 'wb') as dst:
+            convert_bin(src, dst, option)
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(run())

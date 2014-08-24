@@ -25,12 +25,17 @@ env = Environment(
 )
 env.Append(
     BUILDERS={
-        'Fontb642png': Builder(
-            action='contrib/b642png -o $TARGET $SOURCE',
-            suffix='.png',
-            src_suffix='.b64',
+        'Font_bin2hex': Builder(
+            action='contrib/bin2hex -o $TARGET $SOURCE',
+            suffix='.hex',
+            src_suffix='.bin',
         ),
-        'Fontpng2hex': Builder(
+        'Font_fnt2bin': Builder(
+            action='contrib/fnt2bin -o $TARGET $SOURCE',
+            suffix='.bin',
+            src_suffix='.fnt',
+        ),
+        'Font_png2hex': Builder(
             action='contrib/png2hex $SOURCE > $TARGET',
             suffix='.hex',
             src_suffix='.png',
@@ -83,9 +88,11 @@ env_sauce.Append(
 source_hex = [
     Glob('build/piece/font/hex/*.hex'),
 ] + [
-    env.Fontpng2hex(png) for png in Glob('build/piece/font/png/*.png') + [
-        env.Fontb642png(b64) for b64 in Glob('build/piece/font/b64/*.b64')
-    ]
+    env.Font_png2hex(png)
+    for png in Glob('build/piece/font/png/*.png')
+] + [
+    env.Font_bin2hex(env.Font_fnt2bin(fnt))
+    for fnt in Glob('build/piece/font/fnt/*.fnt')
 ]
 
 generated = []

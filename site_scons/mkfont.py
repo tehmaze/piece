@@ -64,6 +64,7 @@ def convert_to(sources, target):
         fontnames = []
         for source in sources:
             fontnames.append(convert(str(source), handle))
+        fontnames.sort()
 
         handle.write('void piece_font_init(void) {\n')
         handle.write('    piece_fonts = piece_allocate(sizeof(piece_list));\n');
