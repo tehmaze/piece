@@ -66,13 +66,32 @@ atascii_arabic        | Atari ATASCII Arabic
 atascii_graphics      | Atari ATASCII Graphics
 atascii_international | Atari ATASCII International
 
-### Commodore 64
+### Commodore 64 fonts
 
 Font                  | Description
 --------------------- | ------------------------------------------------------
 petscii               | Commodore 64 PETSCII (unshifted)
 petscii_shifted       | Commodore 64 PETSCII (shifted)
 
+### Miscellanious fonts
+
+Font                  | Description
+--------------------- | ------------------------------------------------------
+armscii8              | Armenian ASCII (ARMSCII)
+haik8                 | haik8 code page (ARMSCII)
+iso                   | West European
+iso02                 | Central European
+iso04                 | Baltic
+iso05                 | Cyrillic
+iso07                 | Greek
+iso08                 | Hebrew
+iso09                 | Turkish
+iso15                 | West European
+koi8                  | Russian
+koi8_r                | Russian
+koi8_u                | Ukrainian
+swiss_1131            | Belarusian
+swiss_1251            | Cyrillic
 
 ## Supported output formats
 
