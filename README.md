@@ -5,9 +5,10 @@ Fast, feature-rich Artscene render engine
 
 
 Features
---------
+========
 
-Supported file formats:
+Supported file formats
+----------------------
 
 * ANSi (.ans), mostly [ECMA-048](http://www.ecma-international.org/publications/standards/Ecma-048.htm) compliant
 * ASCII (.asc, .diz)
@@ -20,24 +21,72 @@ Supported file formats:
 * XBIN (.xb), fully [Acid XBIN](http://www.acid.org/info/xbin/xbin.htm) compliant
 
 
-Supported pixel fonts:
+Supported pixel fonts
+---------------------
 
-* MS-DOS Code Page 437, 850, 852, 857, 860, 861, 862, 863, 865, 866, 869
-* Amiga Topaz 1, 1+ (A500, A1000, A2000), 2, 2+ (A600, A1200, A4000)
-* Amiga B-Strict, B-Struct
-* Amiga MicroKnight, MicroKnight+, mO'sOul, P0T-NOoDLE
-* Atari ATASCII
-* Commodore 64 PETSCII, PETSCII shifted (PET, VIC-20, C64, CBM-II, Plus/4, C16, C116 and C128)
+*MS-DOS ("OEM") fonts*
+
+Font                  | Description
+--------------------- | ------------------------------------------------------
+cp437                 | MS-DOS Latin US
+cp737                 | MS-DOS Greek
+cp775                 | MS-DOS Baltic Rim
+cp850                 | MS-DOS Latin 1
+cp852                 | MS-DOS Latin 2
+cp855                 | MS-DOS Cyrillic
+cp857                 | MS-DOS Turkish
+cp860                 | MS-DOS Portuguese
+cp861                 | MS-DOS Icelandic
+cp862                 | MS-DOS Hebrew
+cp863                 | MS-DOS French Canada
+cp865                 | MS-DOS Nordic
+cp866                 | MS-DOS Cyrillic CIS 1
+cp866b                | MS-DOS Bulgarian
+cp866c                | MS-DOS Russian
+cp866u                | MS-DOS Ukrainian
+cp869                 | MS-DOS Greek 2
+cp1251                | MS-DOS Slavic
+
+*Amiga fonts*
+
+Font                  | Description
+--------------------- | ------------------------------------------------------
+b_strict              | Amiga B-Strict
+b_struct              | Amiga B-Strict
+microknight           | Amiga MicroKnight
+microknight_plus      | Amiga MicroKnight enhanced version
+mo_soul               | Amiga mO'sOul
+p0t_noodle            | Amiga P0T-NOoDLE
+topaz_a500            | Amiga Topaz 1 (A500, A1000, A2000)
+topazplus_a500        | Amiga Topaz 1 enhanced version
+topaz_a1200           | Amiga Topaz 2 (A600, A1200, A4000)
+topazplus_a1200       | Amiga Topaz 2 enhanced version
+
+*Atari fonts*
+
+Font                  | Description
+--------------------- | ------------------------------------------------------
+atascii_arabic        | Atari ATASCII Arabic
+atascii_graphics      | Atari ATASCII Graphics
+atascii_international | Atari ATASCII International
+
+*Commodore 64*
+
+Font                  | Description
+--------------------- | ------------------------------------------------------
+petscii               | Commodore 64 PETSCII (unshifted)
+petscii_shifted       | Commodore 64 PETSCII (shifted)
 
 
-Supported output formats:
+Supported output formats
+------------------------
 
 * Text (plain text)
 * Image (bmp, gif, jpeg, png)
 
 
 Requirements
-------------
+============
 
 You need the following to compile ``piece``:
 
