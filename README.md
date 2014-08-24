@@ -140,4 +140,4 @@ To remove the ``piece`` installation:
 Inspired by the [Ansilove](http://ansilove.sourceforge.net/) ANSi to PNG
 converter, the first version of ``piece`` was written in Python. Because we
 required more speed, the Python version was ported to pure C and lots of
-feauters and font sets were added.
+features and font sets were added.
