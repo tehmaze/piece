@@ -1,13 +1,36 @@
 import os
+import sys
 import mkfont
+import multiprocessing
+import distutils.sysconfig
 
-required_headers = (
-    'stdio.h',
-    'stdlib.h',
-)
-required_libs = (
-    ('gd', 'gd.h'),
-)
+
+for flag, description, default in (
+        ('libsauce', 'libsauce',         True),
+        ('libpiece', 'libpiece',         True),
+        ('python',   'Python extension', False),
+    ):
+
+    if default:
+        AddOption(
+            '--without-' + flag,
+            dest=flag,
+            action='store_false',
+            default=True,
+            help='Build without ' + description
+        )
+    else:
+        AddOption(
+            '--with-' + flag,
+            dest=flag,
+            action='store_true',
+            default=False,
+            help='Build with ' + description
+        )
+
+num_cpu = int(os.environ.get('NUM_CPU', multiprocessing.cpu_count()))
+SetOption('num_jobs', num_cpu)
+
 env = Environment(
     CC='clang',
     CCFLAGS=[
@@ -19,9 +42,20 @@ env = Environment(
         '-pedantic-errors',
         '-D_GNU_SOURCE',
     ],
-    CPPPATH='include',
+    CPPPATH=[
+        '/usr/include',
+        'include',
+    ],
     LINKFLAGS=[
     ],
+)
+
+required_headers = (
+    'stdio.h',
+    'stdlib.h',
+)
+required_libs = (
+    ('gd', 'gd.h'),
 )
 env.Append(
     BUILDERS={
@@ -43,6 +77,8 @@ env.Append(
     }
 )
 env.VariantDir('build', 'src')
+if GetOption('python'):
+    env.VariantDir('build/lang/python', 'lang/python')
 
 if ARGUMENTS.get('VERBOSE') != '1':
     env.Append(
@@ -56,15 +92,31 @@ if ARGUMENTS.get('VERBOSE') != '1':
     )
 
 
-cfg = Configure(env)
 if env.GetOption('clean'):
     Delete('bin')
     Delete('lib')
-else:
+
+elif not env.GetOption('help'):
+    cfg = Configure(env)
+    cfg.CheckCC()
+    cfg.CheckSHCC()
+
+    if GetOption('python'):
+        print 'piet-ton'
+        if not all([GetOption('libsauce'), GetOption('libpiece')]):
+            print >>sys.stderr, 'Python extension requires both libsauce and libpiece'
+            sys.exit(1)
+
+        python_version = sys.version[:3]
+        required_libs += (
+            ('libpython' + python_version, 'python' + python_version + '/Python.h'),
+        )
+
     for header in required_headers:
         if not cfg.CheckCHeader(header):
             print 'Did not find {0}'.format(header)
             Exit(1)
+
     for name, header in required_libs:
         if header is None:
             if not cfg.CheckLib(name):
@@ -76,8 +128,10 @@ else:
                 Exit(1)
 
     env.ParseConfig('pkg-config --cflags --libs gdlib')
+    env = cfg.Finish()
 
-env = cfg.Finish()
+    print 'Running with -j', GetOption('num_jobs')
+
 env_sauce = env.Clone()
 env_sauce.Append(
     LINKFLAGS=['-lsauce'],
@@ -116,14 +170,15 @@ sauce = env_sauce.Program(
     'bin/sauce',
     ['build/sauce/main.c'],
 )
-libsauce = env.SharedLibrary(
-    'lib/sauce',
-    sauce_src,
-)
-libsauce_static = env.StaticLibrary(
-    'lib/sauce',
-    sauce_src,
-)
+if GetOption('libsauce'):
+    libsauce = env.SharedLibrary(
+        'lib/sauce',
+        sauce_src,
+    )
+    libsauce_static = env.StaticLibrary(
+        'lib/sauce',
+        sauce_src,
+    )
 
 piece_src = [
     'build/sauce/sauce.c',
@@ -141,16 +196,55 @@ piece_src = [
 ] + generated
 piece = env.Program(
     'bin/piece',
-    piece_src + ['build/piece/main.c'],
+    piece_src + [
+        'build/piece/main.c',
+    ],
 )
-libpiece = env.SharedLibrary(
-    'lib/piece',
-    piece_src,
-)
-libpiece_static = env.StaticLibrary(
-    'lib/piece',
-    piece_src,
-)
+
+if GetOption('libpiece'):
+    libpiece = env.SharedLibrary(
+        'lib/piece',
+        piece_src + [
+            'build/piece/lib.c',
+        ]
+    )
+    libpiece_static = env.StaticLibrary(
+        'lib/piece',
+        piece_src + [
+            'build/piece/lib.c',
+        ]
+    )
+
+if GetOption('python'):
+    distvars = distutils.sysconfig.get_config_vars(
+        'CC', 'CXX', 'OPT', 'BASECFLAGS', 'CCSHARED', 'LDSHARED', 'SO',
+    )
+    (cc, cxx, opt, basecflags, ccshared, ldshared, so_ext) = distvars
+    python_lib = env.SharedLibrary(
+        'lib/python/piece/_piece',
+        [
+            'build/lang/python/src/_piece.c',
+        ],
+        LIBS=['sauce', 'piece'],
+        LIBPATH=['lib'],
+        CC=cc,
+        SHLINK=ldshared,
+        SHLINKFLAGS=[],
+        SHLIBPREFIX="",
+        SHLIBSUFFIX=so_ext,
+        CPPPATH=[
+            distutils.sysconfig.get_python_inc(),
+            'build/lang/python/include',
+        ],
+        CPPFLAGS=[
+            basecflags,
+            opt,
+            '-Wno-unused-parameter',
+        ],
+    )
+    Depends(python_lib, libpiece)
+    Depends(python_lib, libsauce)
+    Install('lib/python/piece/', Glob('build/lang/python/piece/*.py'))
 
 if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
     prefix = '/usr/local'
@@ -163,6 +257,8 @@ if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
         ('lib', libsauce_static, []),
         ('include', ['include/piece.h'], []),
         ('include', Glob('include/piece/*.h'), ['piece']),
+        ('include', Glob('include/piece/parser/*.h'), ['piece/parser']),
+        ('include', Glob('include/piece/writer/*.h'), ['piece/writer']),
         ('include', ['include/sauce.h'], []),
     ]
     for typ, item, subs in targets:
@@ -178,3 +274,5 @@ if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
                 Delete('$SOURCE'),
             ])
             env.Alias('uninstall', 'uninstall-' + base)
+
+# vim:ft=python:
