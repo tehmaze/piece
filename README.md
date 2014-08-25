@@ -182,3 +182,6 @@ Inspired by the [Ansilove](http://ansilove.sourceforge.net/) ANSi to PNG
 converter, the first version of ``piece`` was written in Python. Because we
 required more speed, the Python version was ported to pure C and lots of
 features and font sets were added.
+
+The fonts found in the [fnt](/src/piece/font/fnt/) folder, are part of the
+FreeBSD [newcons](https://wiki.freebsd.org/Newcons) project and BSD licensed.
