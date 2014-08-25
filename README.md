@@ -100,6 +100,10 @@ swiss_1251            | Cyrillic                  | [8x16](docs/font/swiss_1251_
 * Text (plain text)
 * Image (bmp, gif, jpeg, png)
 
+## Supported dynamic languages
+
+* [Python](http://www.python.org/) version 2.6 and 2.7
+
 
 # Requirements
 
@@ -112,27 +116,64 @@ You need the following to compile ``piece``:
 
 # Building
 
+First inspect the build options, by running:
+
+```shellsession
+$ scons --help
+```
+
 To compile everything from source:
 
-    scons
+```shellsession
+$ scons
+```
 
 To clean the build root:
 
-    scons -c
+```shellsession
+$ scons -c
+```
+
+## Building the Python extension
+
+To build the Python extension, make sure you have the Python development
+headers installed.
+
+On a Debian/Ubuntu based system:
+
+```shellsession
+$ sudo apt-get install python-dev
+```
+
+On a Red Hat/RPM based system:
+
+```shellsession
+$ sudo yum install python-devel
+```
+
+To build the extension:
+
+```
+$ scons --with-python
+```
 
 
 # Installing
 
 To install everything into ``/usr/local``:
 
-    scons install
+```shellsession
+$ sudo scons install
+```
 
 
 # Uninstalling
 
 To remove the ``piece`` installation:
 
-    scons uninstall
+```shellsession
+$ sudo scons uninstall
+```
 
 
 # Acknowledgements
