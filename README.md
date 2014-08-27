@@ -5,14 +5,23 @@ Fast, feature-rich Artscene render engine
 
 # Example
 
-```shellsession
+```shell
 $ piece -o docs/font/cp437_8x16.png docs/font/test.ans
 ```
 
 And the resulting image:
 
-<img src="docs/font/cp437_8x16.png" alt="Example rendering" />
+<img src="docs/font/cp437_8x16.png" alt="Example rendering using CP437 8x16 font" />
 
+We can also request `piece` to use an Amiga font:
+
+```shell
+$ piece -f amiga -o docs/font/topaz_a1200.png docs/font/test.ans
+```
+
+Resulting in:
+
+<img src="docs/font/topaz_a1200.png" alt="Example rendering using Topaz a1200 font" />
 
 # Features
 
