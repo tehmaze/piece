@@ -1,0 +1,19 @@
+env = Environment()
+env.Append(
+    BUILDERS={
+        'md2man_html': Builder(
+            action='md2man-html $SOURCE > man/${TARGET.file}',
+            suffix='.html',
+            src_suffix='.md',
+        ),
+        'md2man_roff': Builder(
+            action='md2man-roff $SOURCE > man/${TARGET.file}',
+            suffix='.1',
+            src_suffix='.md',
+        ),
+    }
+)
+
+for man in Glob('*.md'):
+    env.md2man_html(man)
+    env.md2man_roff(man)

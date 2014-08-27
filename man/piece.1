@@ -1,0 +1,55 @@
+.TH PIECE 1 "AUGUST 2014" Linux "User Manuals"
+.SH NAME
+.PP
+piece \- a fast, feature rich artscene parser
+.SH SYNOPSIS
+.PP
+\fB\fCpiece\fR \fB\fC[<options>]\fR \fIinput\fP
+.SH DESCRIPTION
+.PP
+\fB\fCpiece\fR can parse text mode artfiles, such as \fIASCII\fP, \fIANSI\fP, \fIBIN\fP, \fIXBIN\fP,
+\fIArtworx\fP, \fIIce Draw\fP, \fITundra Draw\fP files and turn them into different formats,
+such as (PNG) images.
+.SH OPTIONS
+.TP
+\fB\fC-V --version\fR
+    Display version information
+.TP
+\fB\fC-h --help\fR
+    Display usage information
+.TP
+\fB\fC-H --long-help\fR
+    Display usage information with all options
+.TP
+\fB\fC-t --type\fR \fItype\fP
+    Input file type, use \fIlist\fP for a list, use \fIauto\fP to auto detect
+.TP
+\fB\fC-f --font\fR \fIfont\fP
+    Output font name, use \fIlist\fP for a list
+.TP
+\fB\fC-p --palette\fR \fIpalette\fP
+    Output palette name, use \fIlist\fP for a list
+.TP
+\fB\fC-o --output\fR \fIfilename\fP
+    Output file name
+.TP
+\fB\fC-w --writer\fR \fItype\fP
+    Output writer, use \fIlist\fP for a list
+.SH BUGS
+.PP
+For bugs and feature requests, you can use the GitHub issue tracker at
+.UR https://github.com/tehmaze/piece-c
+.UE
+.SH AUTHOR
+.PP
+Wijnand Modderman\-Lenstra 
+.MT maze@pyt0n.org
+.ME
+.SH SEE ALSO
+.PP
+.BR sauce (1), 
+Acid.org SAUCE specification
+.UR http://www.acid.org/info/sauce/sauce.html
+.UE , Acid.org XBIN specification
+.UR http://www.acid.org/images/0896/XBIN.TXT
+.UE

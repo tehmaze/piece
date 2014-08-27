@@ -6,16 +6,17 @@ import distutils.sysconfig
 
 
 for flag, description, default in (
-        ('static',   'static libraries', True),
-        ('libsauce', 'libsauce',         True),
-        ('libpiece', 'libpiece',         True),
-        ('python',   'Python extension', False),
+        ('static',    'static libraries',                       True),
+        ('build-man', 'rebuild manual pages (requires md2man)', False),
+        ('libsauce',  'libsauce',                               True),
+        ('libpiece',  'libpiece',                               True),
+        ('python',    'Python extension',                       False),
     ):
 
     if default:
         AddOption(
             '--without-' + flag,
-            dest=flag,
+            dest=flag.replace('-', '_'),
             action='store_false',
             default=True,
             help='Build without ' + description
@@ -23,7 +24,7 @@ for flag, description, default in (
     else:
         AddOption(
             '--with-' + flag,
-            dest=flag,
+            dest=flag.replace('-', '_'),
             action='store_true',
             default=False,
             help='Build with ' + description
@@ -33,6 +34,8 @@ default=dict(
     prefix='/usr/local',
     bin_prefix='$PREFIX/bin',
     lib_prefix='$PREFIX/lib',
+    share_prefix='$PREFIX/share',
+    man_prefix='$SHARE_PREFIX/man',
     python_prefix=distutils.sysconfig.get_python_lib(),
 )
 AddOption(
@@ -55,6 +58,20 @@ AddOption(
     metavar='PATH',
     default=default['lib_prefix'],
     help='Install prefix for libraries, defaults to: %s' % default['lib_prefix'],
+)
+AddOption(
+    '--share-prefix',
+    dest='share_prefix',
+    metavar='PATH',
+    default=default['share_prefix'],
+    help='Install prefix for shared data, defaults to: %s' % default['share_prefix'],
+)
+AddOption(
+    '--man-prefix',
+    dest='man_prefix',
+    metavar='PATH',
+    default=default['man_prefix'],
+    help='Install prefix for manuals, defaults to: %s' % default['man_prefix'],
 )
 AddOption(
     '--python-prefix',
@@ -218,11 +235,6 @@ piece_font_src = env.Command(
     action=build_font_c,
 )
 
-prefix = dict(
-    all=GetOption('prefix'),
-    bin=GetOption('bin_prefix').replace('$PREFIX', GetOption('prefix')),
-    lib=GetOption('lib_prefix').replace('$PREFIX', GetOption('prefix')),
-)
 piece_config_src = env.Command(
     source='include/piece/config.h.in',
     target='include/piece/config.h',
@@ -335,20 +347,27 @@ if GetOption('python'):
     Depends(python_lib, libsauce)
     Install('lib/python/piece/', Glob('build/lang/python/piece/*.py'))
 
+
+prefix = dict(
+    all=GetOption('prefix'),
+    bin=GetOption('bin_prefix').replace('$PREFIX', GetOption('prefix')),
+    lib=GetOption('lib_prefix').replace('$PREFIX', GetOption('prefix')),
+)
+prefix['share'] = GetOption('share_prefix').replace('$PREFIX', prefix['all'])
+prefix['man'] = GetOption('man_prefix').replace('$SHARE_PREFIX', prefix['share'])
+
 if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
-    #prefix = GetOption('prefix')
     targets = [
         ('bin', piece, []),
         ('bin', sauce, []),
         ('lib', libpiece, []),
-        ('lib', libpiece_static, []),
         ('lib', libsauce, []),
-        ('lib', libsauce_static, []),
         ('include', ['include/piece.h'], []),
         ('include', Glob('include/piece/*.h'), ['piece']),
         ('include', Glob('include/piece/parser/*.h'), ['piece/parser']),
         ('include', Glob('include/piece/writer/*.h'), ['piece/writer']),
         ('include', ['include/sauce.h'], []),
+        ('man', Glob('man/*.1'), ['man1']),
     ]
     for typ, item, subs in targets:
         dirs = []
@@ -389,5 +408,7 @@ if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
                 ), Delete('$SOURCE'))
                 env.Alias('uninstall', 'uninstall-' + name)
 
+if GetOption('build_man'):
+    SConscript(dirs=['src/man'])
 
 # vim:ft=python:
