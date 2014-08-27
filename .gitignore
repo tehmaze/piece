@@ -1,4 +1,5 @@
 # Generated sources
+include/piece/config.h
 src/piece/font.c
 bin/
 build/

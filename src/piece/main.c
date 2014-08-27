@@ -5,6 +5,7 @@
 #include <getopt.h>
 
 #include "piece.h"
+#include "piece/version.h"
 
 piece_option_flags *piece_options = NULL;
 
@@ -104,6 +105,7 @@ void print_usage(FILE *stream, bool long_help)
     fprintf(stream, "%s [<options>] input\n", program_name);
     fprintf(
         stream,
+        "  -V --version             Display version information\n"
         "  -h --help                Display usage information\n"
         "  -H --long-helo           Display usage information with all options\n"
         "\n"
@@ -134,11 +136,12 @@ int main(int argc, char *argv[])
     int next_option, status = 0;
     piece_source_option_flags *source;
     piece_target_option_flags *target;
-    const char* const short_options = "hHvt:f:o:p:w:";
+    const char* const short_options = "hHvVt:f:o:p:w:";
     const struct option long_options[] = {
         {"help",      no_argument,       NULL, 'h'},
         {"long-help", no_argument,       NULL, 'H'},
         {"verbose",   no_argument,       NULL, 'v'},
+        {"version",   no_argument,       NULL, 'V'},
         /* Input options */
         {"type",      required_argument, NULL, 't'},
         /* Output options */
@@ -196,6 +199,11 @@ int main(int argc, char *argv[])
         case 'v':
             piece_options->verbose++;
             break;
+
+        case 'V':
+            printf("piece version %s (c) Wijnand Modderman-Lenstra, https://maze.io/\n",
+                   PIECE_VERSION);
+            goto exit_free;
 
         case 't':
             source->parsername = optarg;

@@ -1,0 +1,6 @@
+#ifndef PIECE_VERSION_H
+#define PIECE_VERSION_H
+
+#define PIECE_VERSION "0.80.25"
+
+#endif /* PIECE_VERSION_H */

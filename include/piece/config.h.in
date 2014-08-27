@@ -1,0 +1,14 @@
+#ifndef PIECE_CONFIG_H
+#define PIECE_CONFIG_H
+
+#define INSTALL_PREFIX      "{prefix}"
+#define INSTALL_BIN_PREFIX  "{bin_prefix}"
+#define INSTALL_LIB_PREFIX  "{lib_prefix}"
+
+#define WITH_PIECE_INCLUDES "{with_includes}"
+#define WITH_PIECE_LIBS     "{with_libs}"
+#define WITH_PIECE_LIBPIECE {with_libpiece}
+#define WITH_PIECE_LIBSAUCE {with_libsauce}
+#define WITH_PIECE_PYTHON   {with_python}
+
+#endif /* CONFIG_H */

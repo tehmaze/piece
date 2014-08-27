@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "sauce.h"
+#include "piece/version.h"
 
 const char *sauce_data_type[] = {
     "(none)",
@@ -160,8 +161,16 @@ return_close:
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        fprintf(stderr, "%s <filename>[ .. <filename>]\n", argv[0]);
+        fprintf(stderr, "%s [-V] <filename>[ .. <filename>]\n", argv[0]);
         return 1;
+    }
+
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-V")) {
+            printf("piece version %s (c) Wijnand Modderman-Lenstra, https://maze.io/\n",
+                   PIECE_VERSION);
+            return 0;
+        }
     }
 
     for (int i = 1; i < argc; i++) {
