@@ -122,7 +122,12 @@ swiss_1251            | Cyrillic                  | [8x16](docs/font/swiss_1251_
 
 ## Supported dynamic languages
 
-* [Python](http://www.python.org/) version 2.6 and 2.7
+*These extensions are highly experimental and subject to change*
+
+* [Perl](http://www.perl.org/) version 5.6 and up, see
+  the [piece-perl](https://github.com/bbsninja/piece-perl) project
+* [Python](http://www.python.org/) version 2.6 and 2.7, see
+  the [piece-python](https://github.com/bbsninja/piece-python) project
 
 
 # Requirements
