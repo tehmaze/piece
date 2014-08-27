@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #ifdef UNUSED
 #elif defined(__GNUC__)
@@ -15,7 +16,9 @@
 
 void       *piece_allocate(size_t);
 int16_t     piece_fget16(FILE *fd);
+int16_t     piece_fget16i(FILE *fd);
 int32_t     piece_fget32(FILE *fd);
+int32_t     piece_fget32i(FILE *fd);
 char       *piece_get_extension(const char *filename);
 int32_t     piece_max32(int32_t a, int32_t b);
 int32_t     piece_min32(int32_t a, int32_t b);

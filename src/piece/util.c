@@ -17,14 +17,28 @@ void *piece_allocate(size_t size)
     return allocated;
 }
 
+/* Get a 16 bit word, network byte order */
 int16_t piece_fget16(FILE *fd)
 {
     return (fgetc(fd) << 8 | fgetc(fd));
 }
 
+/* Get a 16 bit word, Intel byte order */
+int16_t piece_fget16i(FILE *fd)
+{
+    return (fgetc(fd) | fgetc(fd) << 8);
+}
+
+/* Get a 32 bit short, network byte order */
 int32_t piece_fget32(FILE *fd)
 {
     return (fgetc(fd) << 24 | fgetc(fd) << 16 | fgetc(fd) << 8 | fgetc(fd));
+}
+
+/* Get a 32 bit short, Intel byte order */
+int32_t piece_fget32i(FILE *fd)
+{
+    return (fgetc(fd) | fgetc(fd) << 8 | fgetc(fd) << 16 | fgetc(fd) << 24);
 }
 
 char *piece_get_extension(const char *filename)
