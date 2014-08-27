@@ -3,6 +3,17 @@
 Fast, feature-rich Artscene render engine
 
 
+# Example
+
+```shellsession
+$ piece -o docs/font/cp437_8x16.png docs/font/test.ans
+```
+
+And the resulting image:
+
+<img src="docs/font/cp437_8x16.png" alt="Example rendering" />
+
+
 # Features
 
 ## Supported file formats
