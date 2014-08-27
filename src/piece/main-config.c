@@ -30,7 +30,6 @@ config_option_string config_strings[] = {
 config_option_bool config_bools[] = {
     {"--with-libpiece",   (bool) WITH_PIECE_LIBPIECE},
     {"--with-libsauce",   (bool) WITH_PIECE_LIBSAUCE},
-    {"--with-python",     (bool) WITH_PIECE_PYTHON},
     {NULL,                false}
 };
 

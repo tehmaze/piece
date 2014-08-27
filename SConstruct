@@ -7,10 +7,10 @@ import distutils.sysconfig
 
 for flag, description, default in (
         ('static',    'static libraries',                       True),
+        ('optimize',  'optimize compiler',                      True),
         ('build-man', 'rebuild manual pages (requires md2man)', False),
         ('libsauce',  'libsauce',                               True),
         ('libpiece',  'libpiece',                               True),
-        ('python',    'Python extension',                       False),
     ):
 
     if default:
@@ -36,7 +36,6 @@ default=dict(
     lib_prefix='$PREFIX/lib',
     share_prefix='$PREFIX/share',
     man_prefix='$SHARE_PREFIX/man',
-    python_prefix=distutils.sysconfig.get_python_lib(),
 )
 AddOption(
     '--prefix',
@@ -73,13 +72,6 @@ AddOption(
     default=default['man_prefix'],
     help='Install prefix for manuals, defaults to: %s' % default['man_prefix'],
 )
-AddOption(
-    '--python-prefix',
-    dest='python_prefix',
-    metavar='PATH',
-    default=default['python_prefix'],
-    help='Install prefix for the python extension, defaults to: %s' % default['python_prefix'],
-)
 
 num_cpu = int(os.environ.get('NUM_CPU', multiprocessing.cpu_count()))
 SetOption('num_jobs', num_cpu)
@@ -87,7 +79,6 @@ SetOption('num_jobs', num_cpu)
 env = Environment(
     CC='clang',
     CCFLAGS=[
-        '-g',
         '-std=c99',
         '-Wall',
         '-Wextra',
@@ -102,6 +93,32 @@ env = Environment(
     LINKFLAGS=[
     ],
 )
+
+if GetOption('static'):
+    # Make relocatable binaries
+    env.Append(
+        CCFLAGS=[
+            '-fPIC',
+        ],
+    )
+
+if GetOption('optimize'):
+    env.Append(
+        CCFLAGS=[
+            '-Os',
+        ],
+        LINKFLAGS=[
+            '-Os',
+        ],
+    )
+
+else:
+    env.Append(
+        CCFLAGS=[
+            '-O0',
+            '-g',
+        ],
+    )
 
 required_headers = (
     'stdio.h',
@@ -130,8 +147,6 @@ env.Append(
     }
 )
 env.VariantDir('build', 'src')
-if GetOption('python'):
-    env.VariantDir('build/lang/python', 'lang/python')
 
 if ARGUMENTS.get('VERBOSE') != '1':
     env.Append(
@@ -153,17 +168,6 @@ elif not env.GetOption('help'):
     cfg = Configure(env)
     cfg.CheckCC()
     cfg.CheckSHCC()
-
-    if GetOption('python'):
-        print 'piet-ton'
-        if not all([GetOption('libsauce'), GetOption('libpiece')]):
-            print >>sys.stderr, 'Python extension requires both libsauce and libpiece'
-            sys.exit(1)
-
-        python_version = sys.version[:3]
-        required_libs += (
-            ('libpython' + python_version, 'python' + python_version + '/Python.h'),
-        )
 
     for header in required_headers:
         if not cfg.CheckCHeader(header):
@@ -214,7 +218,6 @@ def build_config_h(target, source, env):
         with_libs=' '.join('-l%s' % lib for lib in config['LIBS']),
         with_libpiece=int(GetOption('libpiece')),
         with_libsauce=int(GetOption('libsauce')),
-        with_python=int(GetOption('python')),
     ))
 
     for dst, src in zip(target, source):
@@ -227,7 +230,6 @@ def build_font_c(target, source, env):
     mkfont.convert_to(map(str, source), str(target[0]))
     generated.append(str(target[0]))
     print '\x1b[1;31mcreated\x1b[0m %s from %d fonts' % (target[0], len(source))
-
 
 piece_font_src = env.Command(
     source=source_hex,
@@ -268,6 +270,7 @@ libpiece_src = [
     'build/piece/writer.c',
     Glob('build/piece/writer/*.c'),
     'build/piece/font_base.c',
+    'build/piece/chrfont.c',
 ] + generated + piece_font_src
 
 if GetOption('libpiece'):
@@ -316,37 +319,10 @@ piece_config = env.Program(
     ['build/piece/main-config.c'],
 )
 
-if GetOption('python'):
-    distvars = distutils.sysconfig.get_config_vars(
-        'CC', 'CXX', 'OPT', 'BASECFLAGS', 'CCSHARED', 'LDSHARED', 'SO',
-    )
-    (cc, cxx, opt, basecflags, ccshared, ldshared, so_ext) = distvars
-    python_lib = env.SharedLibrary(
-        'lib/python/piece/_piece',
-        [
-            'build/lang/python/src/_piece.c',
-        ],
-        LIBS=['sauce', 'piece'],
-        LIBPATH=['lib'],
-        CC=cc,
-        SHLINK=ldshared,
-        SHLINKFLAGS=[],
-        SHLIBPREFIX="",
-        SHLIBSUFFIX=so_ext,
-        CPPPATH=[
-            distutils.sysconfig.get_python_inc(),
-            'build/lang/python/include',
-        ],
-        CPPFLAGS=[
-            basecflags,
-            opt,
-            '-Wno-unused-parameter',
-        ],
-    )
-    Depends(python_lib, libpiece)
-    Depends(python_lib, libsauce)
-    Install('lib/python/piece/', Glob('build/lang/python/piece/*.py'))
-
+piece_chrfont = env.Program(
+    'bin/piece-chrfont',
+    ['build/piece/main-chrfont.c', libpiece],
+)
 
 prefix = dict(
     all=GetOption('prefix'),
@@ -359,6 +335,7 @@ prefix['man'] = GetOption('man_prefix').replace('$SHARE_PREFIX', prefix['share']
 if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
     targets = [
         ('bin', piece, []),
+        ('bin', piece_config, []),
         ('bin', sauce, []),
         ('lib', libpiece, []),
         ('lib', libsauce, []),
@@ -386,27 +363,6 @@ if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
                 Delete('$SOURCE'),
             ])
             env.Alias('uninstall', 'uninstall-' + base)
-
-    if GetOption('python'):
-        prefix = GetOption('python_prefix')
-        targets = [
-            Glob('lib/python/piece/*.so'),
-            Glob('lib/python/piece/*.py'),
-        ]
-        for item in targets:
-            for base in list(item):
-                env.Alias('install', env.Install(
-                    os.path.join(prefix, 'piece'),
-                    base,
-                ))
-                name = os.path.basename(str(base)).replace('.', '-')
-                env.Command('uninstall-' + name, os.path.join(
-                    prefix, 'piece', os.path.basename(str(base)),
-                ), Delete('$SOURCE'))
-                env.Command('uninstall-python', os.path.join(
-                    prefix, 'piece',
-                ), Delete('$SOURCE'))
-                env.Alias('uninstall', 'uninstall-' + name)
 
 if GetOption('build_man'):
     SConscript(dirs=['src/man'])

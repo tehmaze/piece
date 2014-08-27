@@ -9,6 +9,5 @@
 #define WITH_PIECE_LIBS     "{with_libs}"
 #define WITH_PIECE_LIBPIECE {with_libpiece}
 #define WITH_PIECE_LIBSAUCE {with_libsauce}
-#define WITH_PIECE_PYTHON   {with_python}
 
 #endif /* CONFIG_H */
