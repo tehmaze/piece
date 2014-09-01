@@ -200,7 +200,7 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                             i = (piece_list_size(sequences) > 0)
                                 ? atoi(ANSI_SEQ_CC(sequences, 0))
                                 : 1;
-                            y -= i;
+                            y -= (i == 0 ? 1 : i);
                             if (y < 0) y = 0;
                             break;
 
@@ -208,21 +208,21 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                             i = (piece_list_size(sequences) > 0)
                                 ? atoi(ANSI_SEQ_CC(sequences, 0))
                                 : 1;
-                            y += i;
+                            y += (i == 0 ? 1 : i);
                             break;
 
                         case 'C':   // CUF (CUrsor Forward)
                             i = (piece_list_size(sequences) > 0)
                                 ? atoi(ANSI_SEQ_CC(sequences, 0))
                                 : 1;
-                            x += i;
+                            x += (i == 0 ? 1 : i);
                             break;
 
                         case 'D':   // CUB (CUrsor Back)
                             i = (piece_list_size(sequences) > 0)
                                 ? atoi(ANSI_SEQ_CC(sequences, 0))
                                 : 1;
-                            x -= i;
+                            x -= (i == 0 ? 1 : i);
                             if (x < 0) x = 0;
                             break;
 
