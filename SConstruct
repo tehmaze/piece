@@ -1,8 +1,12 @@
 import os
 import sys
-import mkfont
 import multiprocessing
 import distutils.sysconfig
+import subprocess
+
+# From site_scons
+import mkfont
+from which import which
 
 
 for flag, description, default in (
@@ -83,7 +87,6 @@ env = Environment(
         '-Wall',
         '-Wextra',
         '-Wno-pointer-arith',
-        '-pedantic-errors',
         '-D_GNU_SOURCE',
     ],
     CPPPATH=[
@@ -199,7 +202,22 @@ elif not env.GetOption('help'):
                 print 'Did not find lib{0}.a or {0}.lib'.format(name)
                 Exit(1)
 
-    env.ParseConfig('pkg-config --cflags --libs gdlib')
+    print 'Checking for gdlib-config...',
+    gdlib_config = which('gdlib-config')
+    if gdlib_config:
+        print gdlib_config
+        env.ParseConfig(gdlib_config + ' --cflags --libs')
+        for flag in subprocess.check_output(
+                [gdlib_config, '--features']
+            ).strip().split():
+            env.Append(CCFLAGS=['-D%s' % flag])
+        
+    else:
+        print 'not found in $PATH'
+        print >>sys.stderr, 'Did you install the gdlib development package?'
+        sys.exit(1)
+        env.ParseConfig('pkg-config --cflags --libs gdlib')
+
     env = cfg.Finish()
 
     print 'Running with -j', GetOption('num_jobs')
