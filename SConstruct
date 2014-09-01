@@ -6,11 +6,12 @@ import distutils.sysconfig
 
 
 for flag, description, default in (
-        ('static',    'static libraries',                       True),
-        ('optimize',  'optimize compiler',                      True),
-        ('build-man', 'rebuild manual pages (requires md2man)', False),
-        ('libsauce',  'libsauce',                               True),
-        ('libpiece',  'libpiece',                               True),
+        ('static',    'static libraries',                           True),
+        ('optimize',  'optimize compiler',                          True),
+        ('build-man', 'rebuild manual pages (requires md2man)',     False),
+        ('libsauce',  'libsauce',                                   True),
+        ('libpiece',  'libpiece',                                   True),
+        ('debug',     'build with debug flags (disables optimize)', False),
     ):
 
     if default:
@@ -93,6 +94,21 @@ env = Environment(
     LINKFLAGS=[
     ],
 )
+
+if GetOption('debug'):
+    if GetOption('optimize'):
+        print >>sys.stderr, '--with-debug and --with-optimize are mutually exclusive options'
+        sys.exit(1)
+
+    env.Append(
+        CCFLAGS=[
+            '-g',
+            '-DDEBUG',
+        ],
+        LINKFLAGS=[
+            '-g',
+        ],
+    )
 
 if GetOption('static'):
     # Make relocatable binaries
@@ -188,11 +204,6 @@ elif not env.GetOption('help'):
     env = cfg.Finish()
 
     print 'Running with -j', GetOption('num_jobs')
-
-env_sauce = env.Clone()
-env_sauce.Append(
-    LINKFLAGS=['-lsauce'],
-)
 
 # Build .png from .b64
 # Build .hex from .png
@@ -291,7 +302,7 @@ if GetOption('libpiece'):
         )
 
 if GetOption('static'):
-    sauce = env_sauce.Program(
+    sauce = env.Program(
         'bin/sauce',
         ['build/sauce/main.c', libsauce],
     )

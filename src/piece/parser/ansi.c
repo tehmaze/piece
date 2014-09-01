@@ -385,7 +385,11 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                             }
                     }
 
-                    if (piece_list_size(sequences) > 0) {
+                    if (sequences == NULL) {
+                        sequences = piece_allocate(sizeof(piece_list));
+                        piece_list_new(sequences, sequence_free);
+                    }
+                    else if (piece_list_size(sequences) > 0) {
                         piece_list_free(sequences);
                         sequences = piece_allocate(sizeof(piece_list));
                         piece_list_new(sequences, sequence_free);
