@@ -1,11 +1,13 @@
 language: c
-#compiler: clang
+
 before_install:
- - sudo apt-get install libgd2-noxpm-dev
+ - sudo apt-get install libgd2-noxpm-dev libjpeg-dev libpng12-dev
+ - sudo apt-get install python-dev python-pip
+ - pip install -r requirements.txt
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
+
 script:
  - scons VERBOSE=1 || cat config.log
  - ./bin/piece -v -o m0-mario.png m0-mario.ans
  - ./bin/piece -v -o 2m-sweetprince.png 2m-sweetprince.xb
-
