@@ -120,7 +120,7 @@ bool sauce_flag_non_blink(sauce *record) {
 }
 
 uint8_t sauce_flag_letter_spacing(sauce *record) {
-    return (record != NULL && record->flags.flag_ls == SAUCE_LS_8PIXEL) ? 8 : 9;
+    return (record != NULL && record->flags.flag_ls == SAUCE_LS_9PIXEL) ? 9 : 8;
 }
 
 size_t sauce_size(sauce *record)
