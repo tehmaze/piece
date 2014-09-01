@@ -75,6 +75,7 @@ static void image_save(gdImagePtr image, const char *filename)
 
     dprintf("%s: writing %s image\n", filename, extension);
 
+#ifdef GD_BMP
     if (!strcmp(extension, "bmp")) {
         free(extension);
         fd = fopen(filename, "wb");
@@ -84,7 +85,9 @@ static void image_save(gdImagePtr image, const char *filename)
         }
         return;
     }
-    else if (!strcmp(extension, "jpg") ||
+#endif
+#ifdef GD_JPEG
+    if (!strcmp(extension, "jpg") ||
         !strcmp(extension, "jpeg")) {
         free(extension);
         fd = fopen(filename, "wb");
@@ -94,7 +97,9 @@ static void image_save(gdImagePtr image, const char *filename)
         }
         return;
     }
-    else if (!strcmp(extension, "gif")) {
+#endif
+#ifdef GD_GIF
+    if (!strcmp(extension, "gif")) {
         free(extension);
         fd = fopen(filename, "wb");
         if (!ferror(fd)) {
@@ -103,7 +108,9 @@ static void image_save(gdImagePtr image, const char *filename)
         }
         return;
     }
-    else {
+#endif
+#ifdef GD_PNG
+    do {
         free(extension);
         fd = fopen(filename, "wb");
         if (!ferror(fd)) {
@@ -111,7 +118,8 @@ static void image_save(gdImagePtr image, const char *filename)
             fclose(fd);
         }
         return;
-    }
+    } while(0);
+#endif
 }
 
 gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)

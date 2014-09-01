@@ -4,26 +4,26 @@
 #include <string.h>
 #include "sauce.h"
 
-#define SAUCE_READ_STRING(fd, record, field) do {                   \
-    fread(record->field, sizeof(record->field), 1, fd);             \
-    record->field[sizeof(record->field) - 1] = 0x00;                \
-    if (ferror(fd)) {                                               \
-        fprintf(stderr,                                             \
-        "error %d reading SAUCE field %s\n", ferror(fd), #field);   \
-        free(record);                                               \
-        return NULL;                                                \
-    }                                                               \
-    } while(0)
+#define SAUCE_READ_STRING(fd, record, field) do {                       \
+    if (fread(record->field, sizeof(record->field), 1, fd) == 0 ||      \
+        ferror(fd)) {                                                   \
+        fprintf(stderr,                                                 \
+        "error %d reading SAUCE field %s\n", ferror(fd), #field);       \
+        free(record);                                                   \
+        return NULL;                                                    \
+    }                                                                   \
+    record->field[sizeof(record->field) - 1] = 0x00;                    \
+} while(0)
 
-#define SAUCE_READ_VALUE(fd, record, field) do {                    \
-    fread(&(record->field), sizeof(record->field), 1, fd);          \
-    if (ferror(fd)) {                                               \
-        fprintf(stderr,                                             \
-        "error %d reading SAUCE field %s\n", ferror(fd), #field);   \
-        free(record);                                               \
-        return NULL;                                                \
-    }                                                               \
-    } while(0)
+#define SAUCE_READ_VALUE(fd, record, field) do {                        \
+    if (fread(&(record->field), sizeof(record->field), 1, fd) == 0 ||   \
+        ferror(fd)) {                                                   \
+        fprintf(stderr,                                                 \
+        "error %d reading SAUCE field %s\n", ferror(fd), #field);       \
+        free(record);                                                   \
+        return NULL;                                                    \
+    }                                                                   \
+} while(0)
 
 sauce *sauce_read(FILE *fd)
 {
@@ -82,7 +82,9 @@ void sauce_read_comments(FILE *fd, char **comment, int32_t comments)
         return;
     }
 
-    fread(id, sizeof(id) - 1, 1 , fd);
+    if (fread(id, sizeof(id) - 1, 1 , fd) == 0) {
+        return;
+    }
     id[sizeof(id) - 1] = 0x00;
 
     if (strcmp(id, SAUCE_COMMENT_ID)) {
@@ -93,7 +95,10 @@ void sauce_read_comments(FILE *fd, char **comment, int32_t comments)
     for (i = 0; i < comments; ++i) {
         char buf[SAUCE_COMMENT_SIZE + 1];
         memset(buf, 0, sizeof(buf));
-        fread(buf, SAUCE_COMMENT_SIZE, 1, fd);
+        if (fread(buf, SAUCE_COMMENT_SIZE, 1, fd) == 0) {
+            free(comment);
+            return;
+        }
         buf[SAUCE_COMMENT_SIZE] = 0x00;
 
         if (!ferror(fd)) {

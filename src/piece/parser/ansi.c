@@ -295,6 +295,7 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                                     end = (display->size.width * y) + x;
                                     break;
                                 case 2:     // Entire line
+                                default:
                                     start = (display->size.width * (y - 1)) + 1;
                                     end = (display->size.width * (y + 1)) - 1;
                                     break;
