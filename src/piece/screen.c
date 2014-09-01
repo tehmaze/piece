@@ -54,6 +54,18 @@ void piece_screen_free(piece_screen *display)
         display->tiles = 0;
     }
 
+    if (display->palette != NULL) {
+        free(display->palette->color);
+        free(display->palette);
+        display->palette = NULL;
+    }
+
+    if (display->font != NULL) {
+        free(display->font->glyphs);
+        free(display->font);
+        display->font = NULL;
+    }
+
     if (display->record != NULL) {
         sauce_free(display->record);
         display->record = NULL;

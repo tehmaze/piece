@@ -7,9 +7,9 @@
 #define XBIN_ID_LEN     4
 
 #define XBIN_COMP_NONE  0x00
-#define XBIN_COMP_CHAR  0x40
-#define XBIN_COMP_ATTR  0x80
-#define XBIN_COMP_BOTH  0xc0
+#define XBIN_COMP_CHAR  0x01
+#define XBIN_COMP_ATTR  0x02
+#define XBIN_COMP_BOTH  0x03
 
 typedef struct xbin_flags_s {
     uint8_t     flag_palette   : 1;

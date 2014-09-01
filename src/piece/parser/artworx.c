@@ -47,9 +47,7 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
-        fclose(fd);
-        free(record);
-        return NULL;
+        goto return_free;
     }
 
     // Artworx palettes are a bit perculiar, first we parse all 64 indexed RGB
@@ -87,7 +85,8 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
         fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
         free(record);
         piece_screen_free(display);
-        return NULL;
+        display = NULL;
+        goto return_free;
     }
 
     while (!feof(fd) && ftell(fd) < fsize) {
@@ -103,8 +102,7 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
         x++;
     }
 
-    rewind(fd);
-    fclose(fd);
+return_free:
 
     return display;
 }

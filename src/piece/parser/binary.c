@@ -42,12 +42,11 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
 
     record = sauce_read(fd);
     if (record != NULL) {
-        if (record->data_type != SAUCE_DATA_TYPE_BINARYTEXT) {
-            fprintf(stderr, "%s: not binary text (according to SAUCE)\n", filename);
-            goto binary_read_munmap;
+        if (record->data_type == SAUCE_DATA_TYPE_BINARYTEXT) {
+            fsize = st.st_size - sauce_size(record) - 1;
         }
-        fsize = st.st_size - sauce_size(record) - 1;
-        if (record->file_type > 1) {
+        if (record->data_type == SAUCE_DATA_TYPE_BINARYTEXT &&
+            record->file_type > 1) {
             width = record->file_type * 2;
             height = fsize / (width * 2);
             dprintf("%s: using size %dx%d from SAUCE\n", filename, width, height);
@@ -55,6 +54,9 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
     } else {
         record = piece_allocate(sizeof(sauce));
         record->flags.flag_ls = SAUCE_LS_8PIXEL;
+    }
+
+    if (fsize == 0) {
         fsize = st.st_size;
     }
 
@@ -82,7 +84,6 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
     }
     dprintf(".. at %lu of %lu (after graphics)\n", p - s, st.st_size);
 
-binary_read_munmap:
     munmap(p, st.st_size);
 
 binary_read_free:

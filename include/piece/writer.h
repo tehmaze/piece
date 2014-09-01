@@ -1,10 +1,9 @@
 #ifndef __PIECE_WRITER_H__
 #define __PIECE_WRITER_H__
 
-#include "piece/font.h"
 #include "piece/screen.h"
 
-typedef void (*piece_writer_write_func)(piece_screen *, const char *, piece_font *);
+typedef void (*piece_writer_write_func)(piece_screen *, const char *);
 
 typedef struct piece_writer_s {
     char                    *name;

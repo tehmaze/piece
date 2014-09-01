@@ -49,14 +49,6 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
     record = sauce_read(fd);
     if (record != NULL) {
         fprintf(stderr, "%s: found SAUCE record\n", filename);
-        if (record->data_type != SAUCE_DATA_TYPE_CHARACTER ||
-            record->file_type != SAUCE_FILE_TYPE_TUNDRADRAW) {
-            fprintf(stderr, "%s: not a ThundaDraw file (according to SAUCE)\n",
-                            filename);
-            fclose(fd);
-            free(record);
-            return NULL;
-        }
         fsize = record->file_size;
         rewind(fd);
     } else {
@@ -74,29 +66,23 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
     fread(&header->header, 8, 1, fd);
     if (ferror(fd)) {
         fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
-        fclose(fd);
         free(record);
-        free(header);
-        return NULL;
+        goto return_free;
     }
     if (header->version != 24 ||
         strncmp(header->header, TUNDRADRAW_HEADER, 8)) {
         fprintf(stderr, "%s: not a TundraDraw file (header mismatch)\n",
                         filename);
-        fclose(fd);
         free(record);
-        free(header);
-        return NULL;
+        goto return_free;
     }
 
     display = piece_screen_create(TUNDRADRAW_COLS, 1, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
-        fclose(fd);
         free(record);
-        free(header);
-        return NULL;
+        goto return_free;
     }
 
     display->font = NULL;
@@ -150,8 +136,8 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
         }
     }
 
-    rewind(fd);
-    fclose(fd);
+return_free:
+
     free(header);
 
     return display;

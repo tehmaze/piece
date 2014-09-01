@@ -56,17 +56,13 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80x25 character buffer\n",
                         filename);
-        fclose(fd);
-        free(record);
-        return NULL;
+        goto return_bail;
     }
     display->palette = piece_palette_by_name("pcb");
 
     /* Slurp */
     buffer = piece_allocate(sizeof(unsigned char) * fsize);
     fread(buffer, fsize, 1, fd);
-    rewind(fd);
-    fclose(fd);
 
     size_t fpos = 0;
     while (fpos < fsize &&
@@ -135,6 +131,8 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
                 break;
         }
     }
+
+return_bail:
 
     return display;
 }

@@ -15,7 +15,7 @@ struct piece_font_s {
     uint32_t            w;
     uint32_t            h;
     uint32_t            l;
-    const unsigned char *glyphs;
+    uint8_t             *glyphs;
     uint32_t            aliases;
     piece_font_alias    **alias;
 };

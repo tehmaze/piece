@@ -28,7 +28,7 @@ def convert(filename, stream=sys.stdout):
         for comment in comments:
             stream.write('// {0}\n'.format(comment))
         stream.write('\n')
-    stream.write('const unsigned char piece_{0}_font_glyphs[{t}] = {{\n'.format(
+    stream.write('uint8_t piece_{0}_font_glyphs[{t}] = {{\n'.format(
         fontname,
         l=l,
         h=h,
@@ -58,6 +58,7 @@ def convert_to(sources, target):
     with open(target, 'w') as handle:
         handle.write('/* This file is generated, do not modify */\n\n')
         handle.write('/* Splint directives */\n/*@+charint@*/\n\n')
+        handle.write('#include <stdint.h>\n')
         handle.write('#include <stdlib.h>\n\n')
         handle.write('#include "piece/font.h"\n')
         handle.write('#include "piece/util.h"\n\n')

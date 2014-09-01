@@ -136,10 +136,11 @@ int main(int argc, char *argv[])
     int next_option, status = 0;
     piece_source_option_flags *source;
     piece_target_option_flags *target;
-    const char* const short_options = "hHvVt:f:o:p:w:";
+    const char* const short_options = "hHqvVt:f:o:p:w:";
     const struct option long_options[] = {
         {"help",      no_argument,       NULL, 'h'},
         {"long-help", no_argument,       NULL, 'H'},
+        {"quiet",     no_argument,       NULL, 'q'},
         {"verbose",   no_argument,       NULL, 'v'},
         {"version",   no_argument,       NULL, 'V'},
         /* Input options */
@@ -157,11 +158,11 @@ int main(int argc, char *argv[])
     piece_options->source->parsername = "auto";
     piece_options->target = target = piece_allocate(sizeof(piece_target_option_flags));
     piece_options->target->filename = NULL;
-    piece_options->target->fontname = "cp437_8x16";
-    piece_options->target->writername = "image";
+    piece_options->target->font_name = NULL;         /* Let parser decide */
+    piece_options->target->writer_name = "image";
     piece_options->target->image = piece_allocate(sizeof(piece_image_option_flags));
     piece_options->target->image->transparent = false;
-    piece_options->target->image->palette = "vga";
+    piece_options->target->image->palette = NULL;   /* Let parser decide */
     piece_options->verbose = 0;
 
     /* Initialize parsers */
@@ -198,6 +199,12 @@ int main(int argc, char *argv[])
 
         case 'v':
             piece_options->verbose++;
+            piece_options->quiet = false;
+            break;
+
+        case 'q':
+            piece_options->quiet = true;
+            piece_options->verbose = 0;
             break;
 
         case 'V':
@@ -215,7 +222,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'f':
-            target->fontname = optarg;
+            target->font_name = optarg;
             if (!strcmp(optarg, "list") ||
                 !strcmp(optarg, "help")) {
                 print_font_list();
@@ -228,7 +235,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'p':
-            target->image->palette = optarg;
+            target->image->palette_name = optarg;
             if (!strcmp(optarg, "list") ||
                 !strcmp(optarg, "help")) {
                 print_palette_list();
@@ -237,7 +244,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'w':
-            target->writername = optarg;
+            target->writer_name = optarg;
             if (!strcmp(optarg, "list") ||
                 !strcmp(optarg, "help")) {
                 print_writer_list();
@@ -302,7 +309,7 @@ int main(int argc, char *argv[])
                                          source->parser->description);
     }
 
-    target->writer = piece_writer_for_type(target->writername);
+    target->writer = piece_writer_for_type(target->writer_name);
     if (target->writer == NULL) {
         fprintf(stderr, "%s: no suitable writer found\n",
                         target->filename);
@@ -310,15 +317,29 @@ int main(int argc, char *argv[])
         goto exit_close;
     }
 
-    target->font = piece_font_by_name(target->fontname);
-    if (target->font == NULL) {
-        fprintf(stderr, "%s: unknown font \"%s\"\n",
-                        target->filename,
-                        target->fontname);
-        status = 1;
-        goto exit_close;
+    if (target->image->palette_name != NULL) {
+        target->image->palette = piece_palette_by_name(target->image->palette_name);
+        if (target->image->palette == NULL) {
+            fprintf(stderr, "%s: unknown palette \"%s\"\n",
+                            target->filename,
+                            target->image->palette_name);
+            status = 1;
+            goto exit_close;
+        }
     }
 
+    if (target->font_name != NULL) {
+        target->font = piece_font_by_name(target->font_name);
+        if (target->font == NULL) {
+            fprintf(stderr, "%s: unknown font \"%s\"\n",
+                            target->filename,
+                            target->font_name);
+            status = 1;
+            goto exit_close;
+        }
+    }
+
+    /* Parse the file */
     target->display = source->parser->read(fd, source->filename);
     if (target->display == NULL || target->display->tiles == 0) {
         fprintf(stderr, "%s: parser failed\n", source->filename);
@@ -331,7 +352,28 @@ int main(int argc, char *argv[])
     }
     dprintf("%s: using %s writer\n", target->filename,
                                      target->writer->name);
-    target->writer->write(target->display, target->filename, target->font);
+
+    /* Display some info about the file */
+    if (!piece_options->quiet) {
+        printf("source: %s\n", source->filename);
+        printf("target: %s\n", target->filename);
+        if (target->display->record &&
+            !strncmp(target->display->record->id, SAUCE_ID, 5)) {
+            printf(" title: %.30s\n", target->display->record->title);
+            printf("author: %.20s\n", target->display->record->author);
+            printf(" group: %.20s\n", target->display->record->group);
+            printf("  date: %.8s\n", target->display->record->date);
+        } else {
+            fprintf(stderr, "%s: no SAUCE record\n", source->filename);
+        }
+    }
+
+    /* Finally, write out using the selected writer */
+    target->writer->write(target->display, target->filename);
+
+    if (!piece_options->quiet) {
+        printf("\ndone ;]\n");
+    }
 
 exit_close:
     rewind(fd);

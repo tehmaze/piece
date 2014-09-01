@@ -44,14 +44,16 @@ typedef struct piece_screen_size_s {
 
 typedef struct piece_screen_s {
     piece_screen_tile     *tile;
-    int32_t         tiles;
-    uint8_t         *buffer;
+    int32_t               tiles;
+    uint8_t               *buffer;
     piece_screen_size     size;
-    int64_t         cursor;
+    int64_t               cursor;
     piece_screen_tile     *current;
-    sauce           *record;
-    piece_palette   *palette;
-    piece_font      *font;
+    sauce                 *record;
+    piece_palette         *palette;
+    const char            *palette_name;
+    piece_font            *font;
+    const char            *font_name;
 } piece_screen;
 
 

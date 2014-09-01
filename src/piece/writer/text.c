@@ -8,8 +8,7 @@
 #include "piece/writer.h"
 #include "piece/writer/text.h"
 
-void text_writer_write(piece_screen *display, const char *filename,
-                       piece_font *UNUSED(font))
+void text_writer_write(piece_screen *display, const char *filename)
 {
     FILE *fd = fopen(filename, "wb");
     if (fd == NULL) {

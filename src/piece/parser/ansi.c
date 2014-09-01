@@ -67,11 +67,10 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
         }
     } else {
         record = piece_allocate(sizeof(sauce));
-        record->flags.flag_ls = SAUCE_LS_9PIXEL;
     }
 
     display = piece_screen_create(width, height, record);
-    display->palette = piece_palette_by_name("ega");
+    display->palette_name = "vga";
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d piece_screen buffer\n",
                         filename, width, height);

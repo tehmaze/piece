@@ -28,22 +28,24 @@ typedef struct piece_source_option_flags_s {
 
 typedef struct piece_image_option_flags_s {
     bool                transparent;
-    char                *palette;
+    piece_palette       *palette;
+    char                *palette_name;
 } piece_image_option_flags;
 
 typedef struct piece_target_option_flags_s {
     char                        *filename;
     piece_screen                *display;
-    char                        *fontname;
     piece_font                  *font;
-    char                        *writername;
+    char                        *font_name;
     piece_writer                *writer;
+    char                        *writer_name;
     piece_image_option_flags    *image;
 } piece_target_option_flags;
 
 typedef struct piece_option_flags_s {
-    char                    *program;
+    char                        *program;
     int                         verbose;
+    bool                        quiet;
     piece_source_option_flags   *source;
     piece_target_option_flags   *target;
 } piece_option_flags;

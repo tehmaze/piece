@@ -1,0 +1,10 @@
+language: c
+compiler: clang
+before_install:
+ - sudo apt-get install libgd-dev
+ - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
+ - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
+script:
+ - scons VERBOSE=1
+ - ./bin/piece -v -o m0-mario.png m0-mario.ans
+ - ./bin/piece -v -o 2m-sweetprince.png 2m-sweetprince.xb

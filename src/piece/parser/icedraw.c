@@ -44,7 +44,7 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
     if (memcmp(buffer, idf_magic, sizeof(idf_magic))) {
         fprintf(stderr, "%s: IDF magic mismatch\n", filename);
         free(buffer);
-        return NULL;
+        goto return_free;
     } else {
         free(buffer);
     }
@@ -68,9 +68,8 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %d character buffer\n",
                         filename, width);
-        fclose(fd);
         free(record);
-        return NULL;
+        goto return_free;
     }
 
     fseek(fd, fsize - 4144, SEEK_SET);
@@ -123,8 +122,7 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
         }
     }
 
-    rewind(fd);
-    fclose(fd);
+return_free:
 
     return display;
 }

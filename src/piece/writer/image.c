@@ -114,33 +114,52 @@ static void image_save(gdImagePtr image, const char *filename)
     }
 }
 
-gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename,
-                                    piece_font *font)
+gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
 {
     int32_t colors[256], i, canvas_back;
     uint16_t bits = sauce_flag_letter_spacing(display->record), s, t;
     gdImagePtr result;
     piece_image_writer_buffers *image = piece_allocate(sizeof(piece_image_writer_buffers));
+    piece_palette *palette = display->palette;
+    piece_font *font = display->font;
     struct timeval start, now;
     gettimeofday(&start, NULL);
 
-    if (display->palette == NULL) {
-        fprintf(stderr, "%s: empty palette selected\n", filename);
-        exit(1);
+    /* Command line specified palette takes presedence */
+    if (piece_options->target->image->palette != NULL) {
+        palette = piece_options->target->image->palette;
     }
-    if (font == NULL) {
-        font = piece_font_by_name("cp437_8x16");
+    else if (palette == NULL) {
+        if (display->palette_name == NULL) {
+            fprintf(stderr, "%s: empty palette selected\n", filename);
+            exit(1);
+        } else {
+            palette = piece_palette_by_name(display->palette_name);
+        }
+    }
+
+    /* Command line specified font takes presedence */
+    if (piece_options->target->font) {
+        font = piece_options->target->font;
+    }
+    else if (font == NULL) {
+        if (display->font_name == NULL) {
+            dprintf("%s: using default font cp437_8x16\n", filename);
+            font = piece_font_by_name("cp437_8x16");
+        } else {
+            font = piece_font_by_name(display->font_name);
+        }
     }
 
     dprintf("%s: using %d bit glyphs from font %s\n", filename, bits, font->name);
 
     image->back = gdImageCreate(
-        9 * display->palette->colors,
+        9 * palette->colors,
         16
     );
     image->font = gdImageCreate(
         font->w * 256,
-        font->h * display->palette->colors
+        font->h * palette->colors
     );
     image->ansi = gdImageCreate(bits * display->size.width,
                                font->h * display->size.height);
@@ -157,14 +176,14 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename,
 
     // Colors for font (and back)
     dprintf("%s: setting up %d color palette %s\n", filename,
-                                                    display->palette->colors,
-                                                    display->palette->name);
-    for (i = 0; i < display->palette->colors; ++i) {
+                                                    palette->colors,
+                                                    palette->name);
+    for (i = 0; i < palette->colors; ++i) {
         colors[i] = gdImageColorAllocate(
             image->font,
-            display->palette->color[i].r,
-            display->palette->color[i].g,
-            display->palette->color[i].b
+            palette->color[i].r,
+            palette->color[i].g,
+            palette->color[i].b
         );
     }
     colors[255] = gdImageColorAllocate(image->font, 200, 220, 169);
@@ -177,12 +196,12 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename,
     gdImageFilledRectangle(
         image->font,
         0, 0,
-        font->w * 256, font->h * display->palette->colors,
+        font->w * 256, font->h * palette->colors,
         255
     );
 
     // Colors for underline
-    for (i = 0; i < display->palette->colors; ++i) {
+    for (i = 0; i < palette->colors; ++i) {
         int32_t r = gdImageRed(image->back, i),
                 g = gdImageGreen(image->back, i),
                 b = gdImageBlue(image->back, i);
@@ -195,14 +214,14 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename,
                                                         font->w,
                                                         font->h);
     gettimeofday(&now, NULL);
-    for (int32_t fg = 0; fg < display->palette->colors; ++fg) {
+    for (int32_t fg = 0; fg < palette->colors; ++fg) {
         for (uint32_t ch = 0; ch < 256; ++ch) {
             image_fontcpy(image->font, font, bits, fg, ch);
         }
     }
 
     // Render back bitmaps
-    for (i = 0; i < display->palette->colors; ++i) {
+    for (i = 0; i < palette->colors; ++i) {
         gdImageFilledRectangle(
             image->back,
             i * 9, 0,
@@ -313,10 +332,9 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename,
     return result;
 }
 
-void image_writer_write(piece_screen *display, const char *filename,
-                        piece_font *font)
+void image_writer_write(piece_screen *display, const char *filename)
 {
-    gdImagePtr image = piece_image_writer_parse(display, filename, font);
+    gdImagePtr image = piece_image_writer_parse(display, filename);
     if (image != NULL) {
         image_save(image, filename);
     }

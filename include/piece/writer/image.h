@@ -11,7 +11,6 @@ typedef struct {
 
 void piece_image_writer_init(void);
 gdImagePtr piece_image_writer_parse(piece_screen *display,
-                                    const char *filename,
-                                    piece_font *font);
+                                    const char *filename);
 
 #endif // __PIECE_WRITER_IMAGE_H__
