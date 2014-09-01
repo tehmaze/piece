@@ -1,6 +1,6 @@
 # Generated sources
-./include/piece/config.h
-./src/piece/font.c
+include/piece/config.h
+src/piece/font.c
 ./bin/
 ./build/
 ./lib/
