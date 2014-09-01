@@ -1,7 +1,7 @@
 language: c
 compiler: clang
 before_install:
- - sudo apt-get install libgd-dev
+ - sudo apt-get install libgd2-noxpm-dev
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
 script:
