@@ -8,3 +8,4 @@ script:
  - scons VERBOSE=1
  - ./bin/piece -v -o m0-mario.png m0-mario.ans
  - ./bin/piece -v -o 2m-sweetprince.png 2m-sweetprince.xb
+
