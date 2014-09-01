@@ -78,7 +78,6 @@ num_cpu = int(os.environ.get('NUM_CPU', multiprocessing.cpu_count()))
 SetOption('num_jobs', num_cpu)
 
 env = Environment(
-    CC='clang',
     CCFLAGS=[
         '-std=c99',
         '-Wall',
