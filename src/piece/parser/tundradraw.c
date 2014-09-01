@@ -27,11 +27,15 @@ bool tundradraw_parser_probe(FILE *fd, const char *UNUSED(filename))
     bool score = false;
 
     header = piece_allocate(sizeof(piece_tundradraw_header));
-    fread(&header->version, 1, 1, fd);
-    fread(&header->header, 8, 1, fd);
+    if (fread(&header->version, 1, 1, fd) == 0 ||
+        fread(&header->header, 8, 1, fd) == 0) {
+        goto return_probe_free;
+    }
 
     score = (header->version == 24 &&
              !strncmp(header->header, TUNDRADRAW_HEADER, 8));
+
+return_probe_free:
     free(header);
     return score;
 }
@@ -62,9 +66,9 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
     }
 
     header = piece_allocate(sizeof(piece_tundradraw_header));
-    fread(&header->version, 1, 1, fd);
-    fread(&header->header, 8, 1, fd);
-    if (ferror(fd)) {
+    if (fread(&header->version, 1, 1, fd) == 0 ||
+        fread(&header->header, 8, 1, fd) == 0 ||
+        ferror(fd)) {
         fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
         free(record);
         goto return_free;

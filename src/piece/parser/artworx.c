@@ -40,7 +40,10 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
         rewind(fd);
     }
 
-    fread(&version, 1, 1, fd);
+    if (fread(&version, 1, 1, fd) == 0) {
+        fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
+        goto return_free;
+    }
     fprintf(stderr, "%s: Artworx version %d\n", filename, version);
 
     display = piece_screen_create(80, 1, record);
@@ -80,7 +83,13 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
     display->font->l = 256;
     fprintf(stderr, "%s: reading 4096 bytes of glyphs\n", filename);
     display->font->glyphs = piece_allocate(4096);
-    fread((char *) display->font->glyphs, 4096, 1, fd);
+    if (fread((char *) display->font->glyphs, 4096, 1, fd) < 1) {
+        fprintf(stderr, "%s: error %d reading font\n", filename, ferror(fd));
+        free(record);
+        piece_screen_free(display);
+        display = NULL;
+        goto return_free;
+    }
     if (ferror(fd)) {
         fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
         free(record);

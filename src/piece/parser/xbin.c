@@ -33,12 +33,15 @@ bool xbin_parser_probe(FILE *fd, const char *UNUSED(filename))
     bool score = false;
 
     header = piece_allocate(sizeof(xbin_header));
-    fread(&header->id, 4, 1, fd);
-    fread(&header->eof_char, 1, 1, fd);
-    fread(&header->width, 2, 1, fd);
-    fread(&header->height, 2, 1, fd);
-    fread(&header->font_size, 1, 1, fd);
-    fread(&header->flags, 1, 1, fd);
+    if (fread(&header->id, 4, 1, fd) == 0 ||
+        fread(&header->eof_char, 1, 1, fd) == 0 ||
+        fread(&header->width, 2, 1, fd) == 0 ||
+        fread(&header->height, 2, 1, fd) == 0 ||
+        fread(&header->font_size, 1, 1, fd) == 0 ||
+        fread(&header->flags, 1, 1, fd) == 0) {
+        score = false;
+        goto return_probe_free;
+    }
 
     score = (
         !strncmp(header->id, XBIN_ID, XBIN_ID_LEN) &&
@@ -47,6 +50,8 @@ bool xbin_parser_probe(FILE *fd, const char *UNUSED(filename))
         header->font_size > 0 &&
         header->font_size < 33
     );
+
+return_probe_free:
     free(header);
     return score;
 }

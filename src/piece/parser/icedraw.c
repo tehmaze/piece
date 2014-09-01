@@ -40,7 +40,11 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
 
     rewind(fd);
     buffer = piece_allocate(sizeof(idf_magic));
-    fread(buffer, sizeof(idf_magic), 1, fd);
+    if (fread(buffer, sizeof(idf_magic), 1, fd) == 0) {
+        fprintf(stderr, "%s: read error %d\n", filename, ferror(fd));
+        free(buffer);
+        goto return_free;
+    }
     if (memcmp(buffer, idf_magic, sizeof(idf_magic))) {
         fprintf(stderr, "%s: IDF magic mismatch\n", filename);
         free(buffer);
@@ -79,7 +83,11 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
     display->font->h = 16;
     display->font->l = 256;
     display->font->glyphs = piece_allocate(4096);
-    fread((char *) display->font->glyphs, 4096, 1, fd);
+    if (fread((char *) display->font->glyphs, 4096, 1, fd) == 0) {
+        fprintf(stderr, "%s: error %d reading font\n", filename, ferror(fd));
+        piece_screen_free(display);
+        goto return_free;
+    }
 
     display->palette = piece_palette_new("from file", 0);
     piece_rgb_color rgb;

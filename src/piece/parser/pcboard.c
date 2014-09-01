@@ -62,7 +62,12 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
 
     /* Slurp */
     buffer = piece_allocate(sizeof(unsigned char) * fsize);
-    fread(buffer, fsize, 1, fd);
+    if (fread(buffer, fsize, 1, fd) != fsize) {
+        fprintf(stderr, "%s: error %d reading file\n", filename, ferror(fd));
+        piece_screen_free(display);
+        free(buffer);
+        goto return_bail;
+    }
 
     size_t fpos = 0;
     while (fpos < fsize &&

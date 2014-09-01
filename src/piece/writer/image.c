@@ -124,7 +124,8 @@ static void image_save(gdImagePtr image, const char *filename)
 
 gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
 {
-    int32_t colors[256], i, canvas_back;
+    int32_t colors[256] __attribute__((unused));
+    int32_t i, canvas_back;
     uint16_t bits = sauce_flag_letter_spacing(display->record), s, t;
     gdImagePtr result;
     piece_image_writer_buffers *image = piece_allocate(sizeof(piece_image_writer_buffers));
@@ -331,6 +332,10 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
         printf("\r");
     }
     dprintf("%s: .. it took %.03fs           \n", filename, piece_seconds(now));
+
+    if (piece_options->target->image->transparent) {
+        gdImageColorTransparent(image->ansi, canvas_back);
+    }
 
     gdImageDestroy(image->font);
     gdImageDestroy(image->back);
