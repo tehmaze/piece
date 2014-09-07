@@ -46,7 +46,7 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
     }
     fprintf(stderr, "%s: Artworx version %d\n", filename, version);
 
-    display = piece_screen_create(80, 1, record);
+    display = piece_screen_new(80, 1, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
@@ -120,12 +120,14 @@ static char *artworx_extensions[] = {
     "adf",
     NULL
 };
+
 static piece_parser artworx_parser = {
     "artworx",
     "Artworx",
     NULL,
     artworx_parser_read,
     artworx_extensions,
+    NULL,
     "cp437_8x16"
 };
 

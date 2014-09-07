@@ -6,8 +6,11 @@
 #include "piece/parser.h"
 #include "piece/parser/ansi.h"
 #include "piece/parser/artworx.h"
+#include "piece/parser/ascii.h"
+#include "piece/parser/ascii7.h"
 #include "piece/parser/binary.h"
 #include "piece/parser/icedraw.h"
+#include "piece/parser/irc.h"
 #include "piece/parser/pcboard.h"
 #include "piece/parser/tundradraw.h"
 #include "piece/parser/xbin.h"
@@ -22,8 +25,11 @@ void piece_parser_init(void)
 
     piece_ansi_parser_init();
     piece_artworx_parser_init();
+    piece_ascii_parser_init();
+    piece_ascii7_parser_init();
     piece_binary_parser_init();
     piece_icedraw_parser_init();
+    piece_irc_parser_init();
     piece_pcboard_parser_init();
     piece_tundradraw_parser_init();
     piece_xbin_parser_init();
@@ -101,7 +107,7 @@ piece_parser *piece_parser_for(FILE *fd, const char *filename)
             }
         }
 
-        free(extension);
+        //free(extension);
     }
 
     if (found == NULL) {

@@ -28,6 +28,23 @@ static void sequence_free(void *sequence) {
     free(sequence);
 }
 
+bool piece_ansi_parser_probe(FILE *fd, const char *UNUSED(filename))
+{
+    uint8_t probe[PIECE_ANSI_PROBE_ARR];
+    int escapes = 0;
+
+    memset(probe, 0, PIECE_ANSI_PROBE_ARR);
+    if (fread(probe, PIECE_ANSI_PROBE_MAX, 1, fd) > 0) {
+        for (size_t i = 0; i < PIECE_ANSI_PROBE_MAX; i++) {
+            if (probe[0] == 0x1b && probe[1] == '[') {
+                escapes++;
+            }
+        }
+    }
+
+    return (escapes > PIECE_ANSI_PROBE_ESC);
+}
+
 piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
 {
     piece_screen *display = NULL;
@@ -53,7 +70,6 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
         !strcmp(extension, "ion")) {
         width = 45;
     }
-    free(extension);
 
     record = sauce_read(fd);
     if (record != NULL) {
@@ -69,7 +85,7 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
         record = piece_allocate(sizeof(sauce));
     }
 
-    display = piece_screen_create(width, height, record);
+    display = piece_screen_new(width, height, record);
     display->palette_name = "vga";
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d piece_screen buffer\n",
@@ -538,17 +554,24 @@ void piece_ansi_parser_parse_sgr256(piece_screen *display, uint32_t sgr, uint32_
     }
 }
 
-static char *piece_ansi_extensions[] = {
+static char *ansi_extensions[] = {
     "ans",
     NULL
 };
 
+static piece_parser_sauce ansi_sauce[] = {
+    {SAUCE_DATA_TYPE_CHARACTER, SAUCE_FILE_TYPE_ANSI},
+    {SAUCE_DATA_TYPE_CHARACTER, SAUCE_FILE_TYPE_ANSIMATION},
+    {0, 0}
+};
+
 static piece_parser piece_ansi_parser = {
     "ansi",
-    "ANSi coloring codes and cursor positioning",
-    NULL,
+    "ANSi escape sequences",
+    piece_ansi_parser_probe,
     piece_ansi_parser_read,
-    piece_ansi_extensions,
+    ansi_extensions,
+    ansi_sauce,
     "cp437_8x16"
 };
 

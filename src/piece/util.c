@@ -1,3 +1,5 @@
+#include <ctype.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +48,58 @@ char *piece_get_extension(const char *filename)
     const char *dot = strrchr(filename, '.');
     if (!dot || dot == filename) return "";
     return strdup(dot + 1);
+}
+
+void piece_hexdump(FILE *stream, void *data, off_t offset, size_t size)
+{
+    uint8_t *src = data;
+    off_t i, j;
+    bool curr_zeros = false, prev_zeros = false, skip_zeros = false;
+
+    for (i = 0; i < (off_t) size; i += 16) {
+        curr_zeros = true;
+        for (j = 0; j < 16; j++) {
+            if (src[i + j] != 0x00) {
+                curr_zeros = false;
+            }
+        }
+
+        if (!curr_zeros && skip_zeros) {
+            skip_zeros = false;
+        }
+
+        if (!skip_zeros && !(curr_zeros && !prev_zeros)) {
+            fprintf(stream, "0x%08jx", offset + i);
+            for (j = 0; j < 16; j++) {
+                if (i + j > (off_t) size) break;
+                if (j % 8 == 0) {
+                    fprintf(stream, " ");
+                }
+                fprintf(stream, "%02x ", src[i + j]);
+            }
+            fprintf(stream, " |");
+            for (j = 0; j < 16; j++) {
+                if (isprint(src[i + j])) {
+                    fprintf(stream, "%c", src[i + j]);
+                } else {
+                    fprintf(stream, ".");
+                }
+            }
+            fprintf(stream, "|\n");
+        }
+
+        if (curr_zeros && prev_zeros) {
+            if (!skip_zeros) {
+                fprintf(stream, "*\n");
+                skip_zeros = true;
+            }
+        }
+        prev_zeros = curr_zeros;
+    }
+
+    if (size % 16) {
+        fprintf(stream, "\n");
+    }
 }
 
 int32_t piece_max32(int32_t a, int32_t b)

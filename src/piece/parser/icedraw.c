@@ -68,7 +68,7 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
 
     fseek(fd, 8, SEEK_SET);
     width = (fgetc(fd) | (fgetc(fd) << 4)) + 1;
-    display = piece_screen_create(width, 1, record);
+    display = piece_screen_new(width, 1, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %d character buffer\n",
                         filename, width);
@@ -139,12 +139,14 @@ static char *icedraw_extensions[] = {
     "idf",
     NULL
 };
+
 static piece_parser icedraw_parser = {
     "icedraw",
     "iCE Draw",
     icedraw_parser_probe,
     icedraw_parser_read,
     icedraw_extensions,
+    NULL,
     "cp437_8x16"
 };
 

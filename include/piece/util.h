@@ -20,6 +20,7 @@ int16_t     piece_fget16i(FILE *fd);
 int32_t     piece_fget32(FILE *fd);
 int32_t     piece_fget32i(FILE *fd);
 char       *piece_get_extension(const char *filename);
+void        piece_hexdump(FILE *stream, void *data, off_t offset, size_t size);
 int32_t     piece_max32(int32_t a, int32_t b);
 int32_t     piece_min32(int32_t a, int32_t b);
 double      piece_seconds(struct timeval then);

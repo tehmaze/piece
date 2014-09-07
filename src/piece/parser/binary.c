@@ -60,7 +60,7 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
         fsize = st.st_size;
     }
 
-    display = piece_screen_create(width, height, record);
+    display = piece_screen_new(width, height, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d screen buffer\n",
                         filename, width, height);
@@ -106,6 +106,7 @@ static piece_parser binary_parser = {
     NULL,
     binary_parser_read,
     binary_extensions,
+    NULL,
     "cp437_8x16"
 };
 

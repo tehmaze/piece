@@ -81,7 +81,7 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
         goto return_free;
     }
 
-    display = piece_screen_create(TUNDRADRAW_COLS, 1, record);
+    display = piece_screen_new(TUNDRADRAW_COLS, 1, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
@@ -151,12 +151,19 @@ static char *tundradraw_extensions[] = {
     "tnd",
     NULL
 };
+
+static piece_parser_sauce tundradraw_sauce[] = {
+    {SAUCE_DATA_TYPE_CHARACTER, SAUCE_FILE_TYPE_PCBOARD},
+    {0, 0}
+};
+
 static piece_parser tundradraw_parser = {
     "tundradraw",
     "Thundra Draw",
     tundradraw_parser_probe,
     tundradraw_parser_read,
     tundradraw_extensions,
+    tundradraw_sauce,
     "cp437_8x16"
 };
 

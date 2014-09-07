@@ -13,12 +13,18 @@ typedef struct piece_parser_extensions_s {
     char                    **extensions;
 } piece_parser_extensions;
 
+typedef struct piece_parser_sauce_s {
+    uint8_t                 data_type;
+    uint8_t                 file_type;
+} piece_parser_sauce;
+
 typedef struct piece_parser_s {
     char                    *name;
     char                    *description;
     piece_parser_probe_func probe;
     piece_parser_read_func  read;
     char                    **extensions;
+    piece_parser_sauce      *saucetypes;
     char                    *font_name;
 } piece_parser;
 

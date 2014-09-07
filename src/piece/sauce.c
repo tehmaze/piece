@@ -48,8 +48,8 @@ piece_font_alias sauce_font_map[] = {
     {"Amiga MicroKnight+",    "microknightplus",            8, false, NULL},
     {"Amiga mOsOul",          "mo_soul",                    8, false, NULL},
     {"Atari ATASCII",         "atascii_international_8x16", 8, false, NULL},
-    {"C64 PETSCII unshifted", "petscii",                    8, false, NULL},
-    {"C64 PETSCII shifted",   "petscii_shifted",            8, false, NULL},
+    {"C64 PETSCII unshifted", "petscii_8x8",                8, false, NULL},
+    {"C64 PETSCII shifted",   "petscii_8x8",                8, false, NULL},
     {NULL,                    NULL,                         0, false, NULL}
 };
 

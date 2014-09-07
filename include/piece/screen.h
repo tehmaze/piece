@@ -59,8 +59,7 @@ typedef struct piece_screen_s {
 
 // Function prototypes
 
-piece_screen        *piece_screen_create(int32_t width, int32_t height,
-                                         sauce *);
+piece_screen        *piece_screen_new(int32_t width, int32_t height, sauce *);
 void                piece_screen_free(piece_screen *);
 void                piece_screen_putchar(piece_screen *, uint8_t ch,
                                          int32_t *x, int32_t *y, bool);

@@ -155,7 +155,7 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
     }
     record->flags.flag_b = header->flags.flag_non_blink;
 
-    display = piece_screen_create(header->width, header->height, record);
+    display = piece_screen_new(header->width, header->height, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d screen buffer\n",
                         filename, header->width, header->height);
@@ -289,12 +289,18 @@ static char *xbin_extensions[] = {
     NULL
 };
 
+static piece_parser_sauce xbin_sauce[] = {
+    {SAUCE_DATA_TYPE_XBIN, SAUCE_FILE_TYPE_XBIN},
+    {0, 0}
+};
+
 static piece_parser xbin_parser = {
     "xbin",
     "eXtended Binary",
     xbin_parser_probe,
     xbin_parser_read,
     xbin_extensions,
+    xbin_sauce,
     "cp437_8x16"
 };
 

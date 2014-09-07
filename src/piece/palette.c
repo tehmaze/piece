@@ -6,22 +6,22 @@
 #include "piece/util.h"
 
 static piece_rgb_color ANSI_RGB[16] = {
-    {0x00, 0x00, 0x00},     /* Black */
-    {0xaa, 0x00, 0x00},     /* Red */
-    {0x00, 0xaa, 0x00},     /* Green */
-    {0xaa, 0x55, 0x00},     /* Brown */
-    {0x00, 0x00, 0xaa},     /* Blue */
-    {0xaa, 0x00, 0xaa},     /* Magenta */
-    {0x00, 0xaa, 0xaa},     /* Cyan */
-    {0xaa, 0xaa, 0xaa},     /* White */
-    {0x55, 0x55, 0x55},     /* Black (dark) */
-    {0xff, 0x55, 0x55},     /* Red */
-    {0x55, 0xff, 0x55},     /* green */
-    {0xff, 0xff, 0x55},     /* yellow */
-    {0x55, 0x55, 0xff},     /* blue */
-    {0xff, 0x55, 0xff},     /* magenta */
-    {0x55, 0xff, 0xff},     /* cyan */
-    {0xff, 0xff, 0xff},     /* white */
+    {0x00, 0x00, 0x00},     /* 0x00 Black */
+    {0xaa, 0x00, 0x00},     /* 0x01 Red */
+    {0x00, 0xaa, 0x00},     /* 0x02 Green */
+    {0xaa, 0x55, 0x00},     /* 0x03 Brown */
+    {0x00, 0x00, 0xaa},     /* 0x04 Blue */
+    {0xaa, 0x00, 0xaa},     /* 0x05 Magenta */
+    {0x00, 0xaa, 0xaa},     /* 0x06 Cyan */
+    {0xaa, 0xaa, 0xaa},     /* 0x07 White */
+    {0x55, 0x55, 0x55},     /* 0x08 Black (dark) */
+    {0xff, 0x55, 0x55},     /* 0x09 Red */
+    {0x55, 0xff, 0x55},     /* 0x0a green */
+    {0xff, 0xff, 0x55},     /* 0x0b yellow */
+    {0x55, 0x55, 0xff},     /* 0x0c blue */
+    {0xff, 0x55, 0xff},     /* 0x0d magenta */
+    {0x55, 0xff, 0xff},     /* 0x0e cyan */
+    {0xff, 0xff, 0xff},     /* 0x0f white */
 };
 
 static piece_rgb_color BIN_RGB[16] = {
@@ -41,6 +41,26 @@ static piece_rgb_color BIN_RGB[16] = {
     {0xff, 0x55, 0xff},
     {0xff, 0xff, 0x55},
     {0xff, 0xff, 0xff},
+};
+
+/* http://www.c64-wiki.com/index.php/Color */
+static piece_rgb_color C64_RGB[16] = {
+    {0x00, 0x00, 0x00},
+    {0xff, 0xff, 0xff},
+    {0x88, 0x00, 0x00},
+    {0xaa, 0xff, 0xee},
+    {0xcc, 0x44, 0xcc},
+    {0x00, 0xcc, 0x55},
+    {0x00, 0x00, 0xaa},
+    {0xee, 0xee, 0x77},
+    {0xdd, 0x88, 0x55},
+    {0x66, 0x44, 0x00},
+    {0xff, 0x77, 0x77},
+    {0x33, 0x33, 0x33},
+    {0x77, 0x77, 0x77},
+    {0xaa, 0xff, 0x66},
+    {0x00, 0x88, 0xff},
+    {0xbb, 0xbb, 0xbb}
 };
 
 static piece_rgb_color PCB_RGB[16] = {
@@ -83,6 +103,7 @@ static piece_rgb_color TND_RGB[16] = {
 
 piece_palette *AUTO,
     *BIN_PALETTE,
+    *C64_PALETTE,
     *EGA_PALETTE,
     *PCB_PALETTE,
     *TND_PALETTE,
@@ -129,6 +150,7 @@ void piece_palette_init(void)
 
     AUTO = piece_palette_new("auto", 0);
     BIN_PALETTE = piece_palette_new("bin", 16);
+    C64_PALETTE = piece_palette_new("c64", 16);
     EGA_PALETTE = piece_palette_new("ega", 16);
     PCB_PALETTE = piece_palette_new("pcb", 16);
     TND_PALETTE = piece_palette_new("tnd", 16);
@@ -136,6 +158,7 @@ void piece_palette_init(void)
 
     for (i = 0; i < 16; i++) {
         BIN_PALETTE->color[i] = BIN_RGB[i];
+        C64_PALETTE->color[i] = C64_RGB[i];
         EGA_PALETTE->color[i] = ANSI_RGB[i];
         PCB_PALETTE->color[i] = PCB_RGB[i];
         TND_PALETTE->color[i] = TND_RGB[i];
@@ -163,6 +186,7 @@ void piece_palette_init(void)
 
     piece_list_append(piece_palettes, AUTO);
     piece_list_append(piece_palettes, BIN_PALETTE);
+    piece_list_append(piece_palettes, C64_PALETTE);
     piece_list_append(piece_palettes, EGA_PALETTE);
     piece_list_append(piece_palettes, PCB_PALETTE);
     piece_list_append(piece_palettes, TND_PALETTE);

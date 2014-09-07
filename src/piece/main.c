@@ -82,15 +82,17 @@ bool print_type_piece_list_item(void *item)
 {
     piece_parser *current = item;
     printf("  \x1b[1;31m%-10s\x1b[0m description: %s\n", current->name, current->description);
-    printf("             extensions:  \x1b[1m");
-    for (int i = 0; ; i++) {
-        if (current->extensions[i] == NULL) {
-            printf("\n");
-            break;
+    if (current->extensions != NULL) {
+        printf("             extensions:  \x1b[1m");
+        for (int i = 0; ; i++) {
+            if (current->extensions[i] == NULL) {
+                printf("\n");
+                break;
+            }
+            printf("*.%s ", current->extensions[i]);
         }
-        printf("*.%s ", current->extensions[i]);
+        printf("\x1b[0m");
     }
-    printf("\x1b[0m");
     return true;
 }
 

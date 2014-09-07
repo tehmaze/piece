@@ -7,33 +7,54 @@
 #include "piece/screen.h"
 #include "piece/util.h"
 
-piece_screen *piece_screen_create(int32_t width, int32_t height, sauce *record)
+piece_screen *piece_screen_new(int32_t width, int32_t height, sauce *record)
 {
     piece_screen *display;
 
     display = piece_allocate(sizeof(piece_screen));
-    display->tiles = width * height;
-    //display->tile = allocate(sizeof(screen_tile) * display->tiles);
-    display->tile = calloc(display->tiles, sizeof(piece_screen_tile));
-    if (display->tile == NULL) {
-        fprintf(stderr, "out of memory trying to allocate %d tiles (%lub)\n",
-                        display->tiles, display->tiles * sizeof(piece_screen_tile));
-        return NULL;
-    }
-    display->size.width = width;
-    display->size.height = height;
-    display->current = piece_allocate(sizeof(piece_screen_tile));
-    piece_screen_tile_reset(display->current);
-    display->record = record;
-    display->palette = NULL;
-    display->font = NULL;
+    if (record != NULL && (
+        record->data_type == SAUCE_DATA_TYPE_CHARACTER &&
+        record->file_type == SAUCE_FILE_TYPE_RIPSCRIPT
+        ) || (
+        record->data_type == SAUCE_DATA_TYPE_BITMAP
+        ) || (
+        record->data_type == SAUCE_DATA_TYPE_VECTOR
+        )) {
 
-    dprintf("creating %dx%d screen with %d tiles\n", width, height,
-                                                     display->tiles);
+        /* We don't use tiles */
+        display->tiles = 0;
+        display->tile = NULL;
 
-    piece_screen_tile *tile = display->tile;
-    for (int32_t i = 0; i < display->tiles; ++i) {
-        piece_screen_tile_reset(tile++);
+        if (record->data_type == SAUCE_DATA_TYPE_BITMAP) {
+            display->buffer = calloc(
+                record->tinfo[0] * record->tinfo[1],    /* width x height */
+                sizeof(uint32_t)                        /* 32 bit color */
+            );
+        }
+
+    } else {
+        display->tiles = width * height;
+        display->tile = calloc(display->tiles, sizeof(piece_screen_tile));
+        if (display->tile == NULL) {
+            fprintf(stderr, "out of memory trying to allocate %d tiles (%lub)\n",
+                            display->tiles, display->tiles * sizeof(piece_screen_tile));
+            return NULL;
+        }
+        display->size.width = width;
+        display->size.height = height;
+        display->current = piece_allocate(sizeof(piece_screen_tile));
+        piece_screen_tile_reset(display->current);
+        display->record = record;
+        display->palette = NULL;
+        display->font = NULL;
+
+        dprintf("creating %dx%d screen with %d tiles\n", width, height,
+                                                         display->tiles);
+
+        piece_screen_tile *tile = display->tile;
+        for (int32_t i = 0; i < display->tiles; ++i) {
+            piece_screen_tile_reset(tile++);
+        }
     }
 
     return display;
@@ -178,7 +199,9 @@ piece_screen_tile *screen_tile_append(piece_screen *display)
 bool piece_screen_tile_append_many(piece_screen *display, size_t n)
 {
     uint32_t total = display->tiles + n;
-    dprintf("screen: expanding from %d to %d tiles\n", display->tiles, total);
+    if (piece_options->verbose > 1) {
+        printf("screen: expanding from %d to %d tiles\n", display->tiles, total);
+    }
     piece_screen_tile *tiles = realloc(display->tile,
                                        sizeof(piece_screen_tile) * total);
     if (tiles == NULL) {

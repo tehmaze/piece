@@ -52,7 +52,7 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
         rewind(fd);
     }
 
-    display = piece_screen_create(80, 25, record);
+    display = piece_screen_new(80, 25, record);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80x25 character buffer\n",
                         filename);
@@ -146,12 +146,19 @@ static char *pcboard_extensions[] = {
     "pcb",
     NULL
 };
+
+static piece_parser_sauce pcboard_sauce[] = {
+    {SAUCE_DATA_TYPE_CHARACTER, SAUCE_FILE_TYPE_PCBOARD},
+    {0, 0}
+};
+
 static piece_parser pcboard_parser = {
     "pcboard",
     "PCBoard",
     NULL,
     pcboard_parser_read,
     pcboard_extensions,
+    pcboard_sauce,
     "cp437_8x16"
 };
 

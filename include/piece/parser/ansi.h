@@ -22,6 +22,10 @@ typedef struct piece_ansi_sequence_s {
 #define ANSI_SEQ(seq, i)    (((piece_ansi_sequence *) piece_list_get(seq, i))->sequence)
 #define ANSI_SEQ_CC(seq, i) ((const char *) ANSI_SEQ(seq, i))
 
+#define PIECE_ANSI_PROBE_MAX    0x400   /* First 1kB */
+#define PIECE_ANSI_PROBE_ARR    (PIECE_ANSI_PROBE_MAX + 1)
+#define PIECE_ANSI_PROBE_ESC    8
+
 // Function prototypes
 
 void piece_ansi_parser_init();
