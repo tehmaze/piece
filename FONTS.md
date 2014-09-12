@@ -1,28 +1,5 @@
 # Supported pixel fonts
 
-## MS-DOS ("OEM") fonts
-
-Font                  | Description           | Sizes
---------------------- | --------------------- | -------------------------------
-cp437                 | MS-DOS Latin US       | [8x8](docs/font/cp437_8x8.png) [thin_8x8](docs/font/cp437_thin_8x8.png) [8x14](docs/font/cp437_8x14.png) [8x16](docs/font/cp437_8x16.png) [thin_8x16](docs/font/cp437_thin_8x16.png)
-cp737                 | MS-DOS Greek          | [8x16](docs/font/cp737_8x16.png)
-cp775                 | MS-DOS Baltic Rim     | [8x16](docs/font/cp775_8x16.png)
-cp850                 | MS-DOS Latin 1        | [8x8](docs/font/cp850_8x8.png) [8x14](docs/font/cp850_8x14.png) [8x16](docs/font/cp850_8x16.png) [thin_8x8](docs/font/cp850_thin_8x8.png) [thin_8x16](docs/font/cp850_thin_8x16.png)
-cp852                 | MS-DOS Latin 2        | [8x16](docs/font/cp852_8x16.png) 
-cp855                 | MS-DOS Cyrillic       | [8x16](docs/font/cp855_8x16.png) 
-cp857                 | MS-DOS Turkish        | [8x16](docs/font/cp857_8x16.png) 
-cp860                 | MS-DOS Portuguese     | [8x16](docs/font/cp860_8x16.png) 
-cp861                 | MS-DOS Icelandic      | [8x16](docs/font/cp861_8x16.png) 
-cp862                 | MS-DOS Hebrew         | [8x16](docs/font/cp862_8x16.png) 
-cp863                 | MS-DOS French Canada  | [8x16](docs/font/cp863_8x16.png) 
-cp865                 | MS-DOS Nordic         | [8x8](docs/font/cp865_8x8.png) [8x14](docs/font/cp865_8x14.png) [8x16](docs/font/cp865_8x16.png) [thin_8x8](docs/font/cp865_thin_8x8.png) [thin_8x16](docs/font/cp865_thin_8x16.png) 
-cp866                 | MS-DOS Cyrillic CIS 1 | [8x8](docs/font/cp866_8x8.png) [8x14](docs/font/cp866_8x14.png) [8x16](docs/font/cp866_8x16.png) 
-cp866b                | MS-DOS Bulgarian      | [8x16](docs/font/cp866b_8x16.png) 
-cp866c                | MS-DOS Russian        | [8x16](docs/font/cp866c_8x16.png) 
-cp866u                | MS-DOS Ukrainian      | [8x8](docs/font/cp866u_8x8.png) [8x14](docs/font/cp866u_8x14.png) [8x16](docs/font/cp866u_8x16.png) 
-cp869                 | MS-DOS Greek 2        | [8x16](docs/font/cp869_8x16.png) 
-cp1251                | MS-DOS Slavic         | [8x8](docs/font/cp1251_8x8.png) [8x14](docs/font/cp1251_8x14.png) [8x16](docs/font/cp1251_8x16.png) 
-
 ## Amiga fonts
 
 Font                  | Description                        | Sizes
@@ -64,6 +41,33 @@ vic20-japanese-8x8    | Commodore VIC-20 (Japanese)      | <img src="docs/font/v
 vic20-norwegian-8x8   | Commodore VIC-20 (Norwegian)     | <img src="docs/font/vic20-norwegian-8x8.png">
 vic20-swedish-8x8     | Commodore VIC-20 (Swedish)       | <img src="docs/font/vic20-swedish-8x8.png">
 
+## IBM PC fonts
+
+Font                  | Description           | Example
+--------------------- | --------------------- | -------------------------------
+cp437-8x8             | MS-DOS Latin US       | <img src="docs/font/cp437-8x8.png">
+cp437-8x14            | MS-DOS Latin US       | <img src="docs/font/cp437-8x14.png">
+cp437-8x16            | MS-DOS Latin US       | <img src="docs/font/cp437-8x16.png">
+cp437-thin-8x8        | MS-DOS Latin US       | <img src="docs/font/cp437-thin-8x8.png">
+cp437-thin-8x16       | MS-DOS Latin US       | <img src="docs/font/cp437-thin-8x16.png">
+cp737                 | MS-DOS Greek          | [8x16](docs/font/cp737-8x16.png)
+cp775                 | MS-DOS Baltic Rim     | [8x16](docs/font/cp775-8x16.png)
+cp850                 | MS-DOS Latin 1        | [8x8](docs/font/cp850-8x8.png) [8x14](docs/font/cp850-8x14.png) [8x16](docs/font/cp850-8x16.png) [thin-8x8](docs/font/cp850_thin-8x8.png) [thin-8x16](docs/font/cp850_thin-8x16.png)
+cp852                 | MS-DOS Latin 2        | [8x16](docs/font/cp852-8x16.png) 
+cp855                 | MS-DOS Cyrillic       | [8x16](docs/font/cp855-8x16.png) 
+cp857                 | MS-DOS Turkish        | [8x16](docs/font/cp857-8x16.png) 
+cp860                 | MS-DOS Portuguese     | [8x16](docs/font/cp860-8x16.png) 
+cp861                 | MS-DOS Icelandic      | [8x16](docs/font/cp861-8x16.png) 
+cp862                 | MS-DOS Hebrew         | [8x16](docs/font/cp862-8x16.png) 
+cp863                 | MS-DOS French Canada  | [8x16](docs/font/cp863-8x16.png) 
+cp865                 | MS-DOS Nordic         | [8x8](docs/font/cp865-8x8.png) [8x14](docs/font/cp865-8x14.png) [8x16](docs/font/cp865-8x16.png) [thin-8x8](docs/font/cp865_thin-8x8.png) [thin-8x16](docs/font/cp865_thin-8x16.png) 
+cp866                 | MS-DOS Cyrillic CIS 1 | [8x8](docs/font/cp866-8x8.png) [8x14](docs/font/cp866-8x14.png) [8x16](docs/font/cp866-8x16.png) 
+cp866b                | MS-DOS Bulgarian      | [8x16](docs/font/cp866b-8x16.png) 
+cp866c                | MS-DOS Russian        | [8x16](docs/font/cp866c-8x16.png) 
+cp866u                | MS-DOS Ukrainian      | [8x8](docs/font/cp866u-8x8.png) [8x14](docs/font/cp866u-8x14.png) [8x16](docs/font/cp866u-8x16.png) 
+cp869                 | MS-DOS Greek 2        | [8x16](docs/font/cp869-8x16.png) 
+cp1251                | MS-DOS Slavic         | [8x8](docs/font/cp1251-8x8.png) [8x14](docs/font/cp1251-8x14.png) [8x16](docs/font/cp1251-8x16.png) 
+
 ## Microsoft MSX
 
 Font                  | Description               | Example
@@ -92,7 +96,7 @@ zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/font/zx-spect
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
 galaksija-8x13        | Galaksija (Galaxy)        | <img src="docs/font/galaksija-8x13.png">
-orao-8x8              | Oraa (Eagle)              | <img src="docs/donts/orao-8x8.png">
+orao-8x8              | Orao (Eagle)              | <img src="docs/font/orao-8x8.png">
 
 ## Miscellanious fonts
 
