@@ -53,22 +53,22 @@ Font                  | Description                      | Example
 pet-1-8x8             | Commodore PET 1                  | <img src="docs/font/pet-1-8x8.png">
 pet-2-8x8             | Commodore PET 2                  | <img src="docs/font/pet-1-8x8.png">
 pet-greek-8x8         | Commodore PET (Greek)            | <img src="docs/font/pet-greek-8x8.png">
-pet-norweigian-8x8    | Commodore PET (norweigian)       | <img src="docs/font/pet-norweigian-8x8.png">
-pet-russian-8x8       | Commodore PET (russian)          | <img src="docs/font/pet-russian-8x8.png">
-pet-swedish-8x8       | Commodore PET (swedish)          | <img src="docs/font/pet-swedish-8x8.png">
+pet-norwegian-8x8     | Commodore PET (Norwegian)        | <img src="docs/font/pet-norwegian-8x8.png">
+pet-russian-8x8       | Commodore PET (Russian)          | <img src="docs/font/pet-russian-8x8.png">
+pet-swedish-8x8       | Commodore PET (Swedish)          | <img src="docs/font/pet-swedish-8x8.png">
 superpet-8x8          | Commodore SuperPET 9000          | <img src="docs/font/superpet-8x8.png">
 superpet-swedish-8x8  | Commodore SuperPET 9000 (Swedish)| <img src="docs/font/superpet-swedish-8x8.png">
 vic20-8x8             | Commodore VIC-20                 | <img src="docs/font/vic20-8x8.png">
 vic20-german-8x8      | Commodore VIC-20 (German)        | <img src="docs/font/vic20-german-8x8.png">
 vic20-japanese-8x8    | Commodore VIC-20 (Japanese)      | <img src="docs/font/vic20-japanese-8x8.png">
-vic20-norweigian-8x8  | Commodore VIC-20 (Norweigian)    | <img src="docs/font/vic20-norweigian-8x8.png">
+vic20-norwegian-8x8   | Commodore VIC-20 (Norwegian)     | <img src="docs/font/vic20-norwegian-8x8.png">
 vic20-swedish-8x8     | Commodore VIC-20 (Swedish)       | <img src="docs/font/vic20-swedish-8x8.png">
 
 ## Microsoft MSX
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-msx-brazillian-8x8    | MSX (Brazillian)          | <img src="docs/font/msx-brazillian-8x8.png">
+msx-brazilian-8x8     | MSX (Brazilian)           | <img src="docs/font/msx-brazilian-8x8.png">
 msx-cyrillic-8x8      | MSX (Cyrillic)            | <img src="docs/font/msx-cyrillic-8x8.png">
 
 ## Silicon Graphics fonts
@@ -85,7 +85,7 @@ Font                  | Description               | Example
 sam-coupe-8x8         | SAM Coupé (clone)         | <img src="docs/font/sam-coupe-8x8.png">
 zx-81                 | Sinclair ZX81             | <img src="docs/font/zx-81-8x8.png">
 zx-evolution-8x8      | Vitality ZX Evolution     | <img src="docs/font/zx-evolution-8x8.png">
-zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/font/zx-spectum-8x8.png">
+zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/font/zx-spectrum-8x8.png">
 
 ## Miscellanious hobby computer fonts
 
