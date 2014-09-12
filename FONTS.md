@@ -25,21 +25,21 @@ atascii_international | Atari ATASCII International | [8x16](docs/font/atascii_i
 
 ## Commodore fonts
 
-Font                  | Description                      | Example
---------------------- | -------------------------------- | -------------------
-pet-1-8x8             | Commodore PET 1                  | <img src="docs/font/pet-1-8x8.png">
-pet-2-8x8             | Commodore PET 2                  | <img src="docs/font/pet-1-8x8.png">
-pet-greek-8x8         | Commodore PET (Greek)            | <img src="docs/font/pet-greek-8x8.png">
-pet-norwegian-8x8     | Commodore PET (Norwegian)        | <img src="docs/font/pet-norwegian-8x8.png">
-pet-russian-8x8       | Commodore PET (Russian)          | <img src="docs/font/pet-russian-8x8.png">
-pet-swedish-8x8       | Commodore PET (Swedish)          | <img src="docs/font/pet-swedish-8x8.png">
-superpet-8x8          | Commodore SuperPET 9000          | <img src="docs/font/superpet-8x8.png">
-superpet-swedish-8x8  | Commodore SuperPET 9000 (Swedish)| <img src="docs/font/superpet-swedish-8x8.png">
-vic20-8x8             | Commodore VIC-20                 | <img src="docs/font/vic20-8x8.png">
-vic20-german-8x8      | Commodore VIC-20 (German)        | <img src="docs/font/vic20-german-8x8.png">
-vic20-japanese-8x8    | Commodore VIC-20 (Japanese)      | <img src="docs/font/vic20-japanese-8x8.png">
-vic20-norwegian-8x8   | Commodore VIC-20 (Norwegian)     | <img src="docs/font/vic20-norwegian-8x8.png">
-vic20-swedish-8x8     | Commodore VIC-20 (Swedish)       | <img src="docs/font/vic20-swedish-8x8.png">
+Font                                           | Name                  | Description
+---------------------------------------------- | --------------------- | ---------------------------------
+<img src="docs/font/pet-1-8x8.png">            | pet-1-8x8             | Commodore PET 1
+<img src="docs/font/pet-1-8x8.png">            | pet-2-8x8             | Commodore PET 2
+<img src="docs/font/pet-greek-8x8.png">        | pet-greek-8x8         | Commodore PET (Greek)
+<img src="docs/font/pet-norwegian-8x8.png">    | pet-norwegian-8x8     | Commodore PET (Norwegian)
+<img src="docs/font/pet-russian-8x8.png">      | pet-russian-8x8       | Commodore PET (Russian)
+<img src="docs/font/pet-swedish-8x8.png">      | pet-swedish-8x8       | Commodore PET (Swedish)
+<img src="docs/font/superpet-8x8.png">         | superpet-8x8          | Commodore SuperPET 9000
+<img src="docs/font/superpet-swedish-8x8.png"> | superpet-swedish-8x8  | Commodore SuperPET 9000 (Swedish)
+<img src="docs/font/vic20-8x8.png">            | vic20-8x8             | Commodore VIC-20
+<img src="docs/font/vic20-german-8x8.png">     | vic20-german-8x8      | Commodore VIC-20 (German)
+<img src="docs/font/vic20-japanese-8x8.png">   | vic20-japanese-8x8    | Commodore VIC-20 (Japanese)
+<img src="docs/font/vic20-norwegian-8x8.png">  | vic20-norwegian-8x8   | Commodore VIC-20 (Norwegian)
+<img src="docs/font/vic20-swedish-8x8.png">    | vic20-swedish-8x8     | Commodore VIC-20 (Swedish)
 
 ## IBM PC fonts
 
