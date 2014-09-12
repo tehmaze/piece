@@ -50,15 +50,58 @@ atascii_international | Atari ATASCII International | [8x16](docs/font/atascii_i
 
 Font                  | Description                      | Example
 --------------------- | -------------------------------- | -------------------
-vic20 8x8             | Commodore VIC-20                 | <img src="docs/font/vic20-8x8.png">
-vic20_german 8x8      | Commodore VIC-20 (German)        | <img src="docs/font/vic20-german-8x8.png">
+pet-1-8x8             | Commodore PET 1                  | <img src="docs/font/pet-1-8x8.png">
+pet-2-8x8             | Commodore PET 2                  | <img src="docs/font/pet-1-8x8.png">
+pet-greek-8x8         | Commodore PET (Greek)            | <img src="docs/font/pet-greek-8x8.png">
+pet-norweigian-8x8    | Commodore PET (norweigian)       | <img src="docs/font/pet-norweigian-8x8.png">
+pet-russian-8x8       | Commodore PET (russian)          | <img src="docs/font/pet-russian-8x8.png">
+pet-swedish-8x8       | Commodore PET (swedish)          | <img src="docs/font/pet-swedish-8x8.png">
+superpet-8x8          | Commodore SuperPET 9000          | <img src="docs/font/superpet-8x8.png">
+superpet-swedish-8x8  | Commodore SuperPET 9000 (Swedish)| <img src="docs/font/superpet-swedish-8x8.png">
+vic20-8x8             | Commodore VIC-20                 | <img src="docs/font/vic20-8x8.png">
+vic20-german-8x8      | Commodore VIC-20 (German)        | <img src="docs/font/vic20-german-8x8.png">
+vic20-japanese-8x8    | Commodore VIC-20 (Japanese)      | <img src="docs/font/vic20-japanese-8x8.png">
+vic20-norweigian-8x8  | Commodore VIC-20 (Norweigian)    | <img src="docs/font/vic20-norweigian-8x8.png">
+vic20-swedish-8x8     | Commodore VIC-20 (Swedish)       | <img src="docs/font/vic20-swedish-8x8.png">
+
+## Microsoft MSX
+
+Font                  | Description               | Example
+--------------------- | ------------------------- | --------------------------
+msx-brazillian-8x8    | MSX (Brazillian)          | <img src="docs/fonts/msx-brazillian-8x8.png">
+msx-cyrillic-8x8      | MSX (Cyrillic)            | <img src="docs/fonts/msx-cyrillic-8x8.png">
+
+## Silicon Graphics fonts
+
+Font                  | Description               | Example
+--------------------- | ------------------------- | --------------------------
+sgi-iris-3130-8x16    | SGI IRIS 3000             | <img src="docs/fonts/sgi-iris-3130-8x16.png">
+sgi-iris-4d-8x16      | SGI IRIS 4D               | <img src="docs/fonts/sgi-iris-4d-8x16.png">
+
+## Sinclair fonts
+
+Font                  | Description               | Example
+--------------------- | ------------------------- | --------------------------
+sam-coupe-8x8         | SAM Coupé (clone)         | <img src="docs/fonts/sam-coupe-8x8.png">
+zx-81                 | Sinclair ZX81             | <img src="docs/fonts/zx-81-8x8.png">
+zx-evolution-8x8      | Vitality ZX Evolution     | <img src="docs/fonts/zx-evolution-8x8.png">
+zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/fonts/zx-spectum-8x8.png">""
+
+## Miscellanious hobby computer fonts
+
+Font                  | Description               | Example
+--------------------- | ------------------------- | --------------------------
+galaksija-8x13        | Galaksija (Galaxy)        | <img src="docs/fonts/galaksija-8x13.png">
+orao-8x8              | Oraa (Eagle)              | <img src="docs/donts/orao-8x8.png">
 
 ## Miscellanious fonts
 
-Font                  | Description               | Sizes
+Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
+aquarius-8x8          | Aquarius Home Computer    | <img src="docs/fonts/aquarius-8x8.png">
 armscii8              | Armenian ASCII (ARMSCII)  | [8x8](docs/font/armscii8_8x8.png) [8x14](docs/font/armscii8_8x14.png) [8x16](docs/font/armscii8_8x16.png) 
 haik8                 | haik8 code page (ARMSCII) | [8x8](docs/font/haik8_8x8.png) [8x14](docs/font/haik8_8x14.png) [8x16](docs/font/haik8_8x16.png) 
+hitachi-mb-6880-8x8   | Hitachi Basic Master      | <img src="docs/fonts/hitachi-mb-6880-8x8.png">
 iso                   | West European             | [8x8](docs/font/iso_8x8.png) [8x14](docs/font/iso_8x14.png) [8x16](docs/font/iso_8x16.png) [thin_8x16](docs/font/iso_thin_8x16.png) 
 iso02                 | Central European          | [8x8](docs/font/iso02_8x8.png) [8x14](docs/font/iso02_8x14.png) [8x16](docs/font/iso02_8x16.png)  
 iso04                 | Baltic                    | [8x8](docs/font/iso04_8x8.png) [8x14](docs/font/iso04_8x14.png) [8x16](docs/font/iso04_8x16.png)
