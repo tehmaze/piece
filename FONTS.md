@@ -68,40 +68,40 @@ vic20-swedish-8x8     | Commodore VIC-20 (Swedish)       | <img src="docs/font/v
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-msx-brazillian-8x8    | MSX (Brazillian)          | <img src="docs/fonts/msx-brazillian-8x8.png">
-msx-cyrillic-8x8      | MSX (Cyrillic)            | <img src="docs/fonts/msx-cyrillic-8x8.png">
+msx-brazillian-8x8    | MSX (Brazillian)          | <img src="docs/font/msx-brazillian-8x8.png">
+msx-cyrillic-8x8      | MSX (Cyrillic)            | <img src="docs/font/msx-cyrillic-8x8.png">
 
 ## Silicon Graphics fonts
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-sgi-iris-3130-8x16    | SGI IRIS 3000             | <img src="docs/fonts/sgi-iris-3130-8x16.png">
-sgi-iris-4d-8x16      | SGI IRIS 4D               | <img src="docs/fonts/sgi-iris-4d-8x16.png">
+sgi-iris-3130-8x16    | SGI IRIS 3000             | <img src="docs/font/sgi-iris-3130-8x16.png">
+sgi-iris-4d-8x16      | SGI IRIS 4D               | <img src="docs/font/sgi-iris-4d-8x16.png">
 
 ## Sinclair fonts
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-sam-coupe-8x8         | SAM Coupé (clone)         | <img src="docs/fonts/sam-coupe-8x8.png">
-zx-81                 | Sinclair ZX81             | <img src="docs/fonts/zx-81-8x8.png">
-zx-evolution-8x8      | Vitality ZX Evolution     | <img src="docs/fonts/zx-evolution-8x8.png">
-zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/fonts/zx-spectum-8x8.png">""
+sam-coupe-8x8         | SAM Coupé (clone)         | <img src="docs/font/sam-coupe-8x8.png">
+zx-81                 | Sinclair ZX81             | <img src="docs/font/zx-81-8x8.png">
+zx-evolution-8x8      | Vitality ZX Evolution     | <img src="docs/font/zx-evolution-8x8.png">
+zx-spectrum-8x8       | Sinclair ZX Spectrum      | <img src="docs/font/zx-spectum-8x8.png">
 
 ## Miscellanious hobby computer fonts
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-galaksija-8x13        | Galaksija (Galaxy)        | <img src="docs/fonts/galaksija-8x13.png">
+galaksija-8x13        | Galaksija (Galaxy)        | <img src="docs/font/galaksija-8x13.png">
 orao-8x8              | Oraa (Eagle)              | <img src="docs/donts/orao-8x8.png">
 
 ## Miscellanious fonts
 
 Font                  | Description               | Example
 --------------------- | ------------------------- | --------------------------
-aquarius-8x8          | Aquarius Home Computer    | <img src="docs/fonts/aquarius-8x8.png">
+aquarius-8x8          | Aquarius Home Computer    | <img src="docs/font/aquarius-8x8.png">
 armscii8              | Armenian ASCII (ARMSCII)  | [8x8](docs/font/armscii8_8x8.png) [8x14](docs/font/armscii8_8x14.png) [8x16](docs/font/armscii8_8x16.png) 
 haik8                 | haik8 code page (ARMSCII) | [8x8](docs/font/haik8_8x8.png) [8x14](docs/font/haik8_8x14.png) [8x16](docs/font/haik8_8x16.png) 
-hitachi-mb-6880-8x8   | Hitachi Basic Master      | <img src="docs/fonts/hitachi-mb-6880-8x8.png">
+hitachi-mb-6880-8x8   | Hitachi Basic Master      | <img src="docs/font/hitachi-mb-6880-8x8.png">
 iso                   | West European             | [8x8](docs/font/iso_8x8.png) [8x14](docs/font/iso_8x14.png) [8x16](docs/font/iso_8x16.png) [thin_8x16](docs/font/iso_thin_8x16.png) 
 iso02                 | Central European          | [8x8](docs/font/iso02_8x8.png) [8x14](docs/font/iso02_8x14.png) [8x16](docs/font/iso02_8x16.png)  
 iso04                 | Baltic                    | [8x8](docs/font/iso04_8x8.png) [8x14](docs/font/iso04_8x14.png) [8x16](docs/font/iso04_8x16.png)
