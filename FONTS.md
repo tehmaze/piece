@@ -2,6 +2,18 @@
 
 The following font collections are supported.
 
+ * [Amiga](#amiga)
+ * [Atari](#atari)
+ * [Commodore](#commodore)
+ * [IBM](#ibm)
+ * [Microsoft MSX](#microsoft-msx)
+ * [Philips](#philips)
+ * [Silicon Graphics](#silicon-graphics)
+ * [Sinclair](#sinclair)
+ * [Miscellanious Hobby Computers](#miscellanious-hobby-computers)
+ * [Miscellanious](#miscellanious)
+ * [Unkonwn](#unkonwn)
+
 ## Amiga
 
 Example                                         | Name                  | Description                         
