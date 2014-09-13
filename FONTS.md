@@ -131,7 +131,9 @@ Example                                 | Name               | Description
 Example                               | Name             | Description                  
 ------------------------------------- | ---------------- | -----------------------------
 <img src="font/sam-coupe-8x8.png">    | sam-coupe-8x8    | SAM Coupé (ZX Spectrum clone)
+<img src="font/zx-80-8x8.png">        | zx-80-8x8        | Sinclair ZX80                
 <img src="font/zx-81-8x8.png">        | zx-81-8x8        | Sinclair ZX81                
+<img src="font/zx-aszmic-8x8.png">    | zx-aszmic-8x8    | Sinclair ZX Aszmic           
 <img src="font/zx-evolution-8x8.png"> | zx-evolution-8x8 | Vitality ZX Evolution        
 <img src="font/zx-spectrum-8x8.png">  | zx-spectrum-8x8  | Sinclair ZX Spectrum         
 
