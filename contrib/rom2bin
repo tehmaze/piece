@@ -1,0 +1,41 @@
+#!/usr/bin/env python2
+
+def reverse(fnt):
+    out = bytearray()
+    for byte in bytearray(fnt):
+        out.append(byte ^ 0xff)
+    return str(out)
+
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('-s', '--size', required=True, type=int)
+    parser.add_argument('-O', '--offset', required=True, type=int)
+    parser.add_argument('-r', '--add-reverse', default=False, action='store_true')
+    parser.add_argument('-p', '--pad', default=0, type=int)
+    parser.add_argument('filename')
+
+    option = parser.parse_args()
+
+    src = open(option.filename, 'rb')
+    src.seek(option.offset)
+    fnt = src.read(option.size)
+    src.close()
+
+    dst = open(option.output, 'wb')
+    dst.write(fnt)
+    if option.pad:
+        dst.write('\x00' * option.pad)
+    if option.add_reverse:
+        dst.write(reverse(fnt))
+        if option.pad:
+            dst.write('\xff' * option.pad)
+    dst.close()
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(run())
