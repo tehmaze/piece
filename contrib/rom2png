@@ -1,0 +1,103 @@
+#!/usr/bin/env python2
+
+from PIL import Image
+import sys
+
+
+def convert_rom(filename, option):
+    data = bytearray(open(filename, 'rb').read())
+    size = len(data)
+    if size > 1024 * 1024 * 4:
+        print 'too large, bye'
+        return 1
+
+    print size, 'size'
+    bytes_per_char = ((option.char_width * option.char_height) + 7) // 8
+    print bytes_per_char, 'bytes per char'
+    glyphs = size / bytes_per_char
+    print glyphs, 'glyphs'
+    rows = glyphs / option.chars_per_row
+    print rows, 'rows'
+    bytes_per_row = size / rows
+    print bytes_per_row, 'bytes per row'
+
+    image = Image.new('RGB', (
+        (option.char_width + 1) * option.chars_per_row,
+        (option.char_height + 1) * rows,
+    ))
+
+    for row in range(rows):
+        rowoffset = row * bytes_per_row
+        #print row, str(rowdata).encode('hex')
+        for idx in range(option.chars_per_row):
+            #chrdata = rowdata[idx:idx + bytes_per_char]
+            coffset = rowoffset + (idx * bytes_per_char)
+            chrdata = data[coffset:coffset + bytes_per_char]
+            for y in range(option.char_height):
+                for x in range(option.char_width):
+                    o = (y * option.char_width) + x
+                    p = chrdata[y] & (0x80 >> (x & 7))
+                    if p:
+                        image.putpixel(
+                            (
+                                (idx * (option.char_width + 1)) + x,
+                                (row * (option.char_height + 1)) + y,
+                            ),
+                            (255, 255, 255),
+                        )
+
+        for y in range(option.char_height + 1):
+            for col in range(option.chars_per_row):
+                image.putpixel(
+                    (
+                        col * (option.char_width + 1),
+                        row * (option.char_height + 1) + y,
+                    ),
+                    (255, 0, 0),
+                )
+                for x in range(option.char_width + 1):
+                    image.putpixel(
+                        (
+                            col * (option.char_width + 1) + x,
+                            row * (option.char_height + 1),
+                        ),
+                        (255, 0, 0),
+                    )
+
+
+    '''
+    for y in range(rows):
+        for x in range(option.chars_per_row):
+            o = (y * option.char_width) + x
+            o = o * bytes_per_char
+            p = data[o:o + bytes_per_char]
+            for yy in range(option.char_height):
+                for xx in range(option.char_width):
+                    if p[yy] & (0x80 >> (xx & 7)):
+                        image.putpixel(
+                            (
+                                x * option.char_width + xx,
+                                y * option.char_height + yy,
+                            ),
+                            255
+                        )
+    '''
+
+    image.save(option.output)
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-x', '--char-width', default=8, type=int)
+    parser.add_argument('-y', '--char-height', default=8, type=int)
+    parser.add_argument('-r', '--chars-per-row', default=16, type=int)
+    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('filename')
+
+    option = parser.parse_args()
+    convert_rom(option.filename, option)
+
+
+if __name__ == '__main__':
+    sys.exit(run())

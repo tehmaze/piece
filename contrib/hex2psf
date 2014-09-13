@@ -1,0 +1,90 @@
+#!/usr/bin/env python2
+
+import struct
+import sys
+
+PSF1_MAGIC   = bytearray('\x36\x04')
+PSF1_HEADER  = '<bb'
+PSF1_MODE256 = 0x00
+PSF1_MODE512 = 0x01
+
+PSF2_MAGIC   = bytearray('\x72\xb5\x4a\x86')
+PSF2_HEADER  = '<IIIIIII'
+PSF2_FLAGS   = 0x00000000
+PSF2_VERSION = 0x00000000
+
+def convert_psf(filename, stream, version=1):
+    w = 8
+    h = 16
+    glyphs = []
+    with open(filename, 'r') as fd:
+        for line in fd:
+            if line.startswith('# Width: '):
+                w = int(line.split()[-1])
+            elif line.startswith('# Height: '):
+                h = int(line.split()[-1])
+            elif line.startswith('#'):
+                continue
+            elif ':' in line:
+                idx, glyph = line.strip().split(':', 1)
+                idx = int(idx, 16)
+                while len(glyphs) < (idx + 1):
+                    glyphs.append('')
+                glyphs[idx] = glyph.decode('hex')
+
+    if version == 1:
+        if len(glyphs) > 512:
+            raise ValueError('Font has %d glyphs, 512 is the limit' % len(glyphs))
+        if len(glyphs) > 256:
+            mode = PSF1_MODE512
+        else:
+            mode = PSF1_MODE256
+
+        # Write magic
+        stream.write(PSF1_MAGIC)
+        # Write header
+        stream.write(struct.pack(
+            PSF1_HEADER,
+            PSF1_MODE512 if len(glyphs) > 256 else PSF1_MODE256,
+            h,
+        ))
+
+    elif version == 2:
+        # Write magic
+        stream.write(PSF2_MAGIC)
+        # Write header
+        stream.write(struct.pack(
+            PSF2_HEADER,
+            PSF2_VERSION,
+            struct.calcsize(PSF2_HEADER) + len(PSF2_MAGIC),
+            PSF2_FLAGS,
+            len(glyphs),
+            h * ((w + 7) // 8),
+            h,
+            w,
+        ))
+
+    # Write font data
+    stream.write(''.join(glyphs))
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', required=True)
+    parser.add_argument('-v', '--version', default=2, choices=[1, 2], type=int,
+        help='PSF version (1 or 2, defaults to 2)')
+    parser.add_argument('filename')
+
+    option = parser.parse_args()
+    if option.output == '-':
+        stream = sys.stdout
+    else:
+        stream = open(option.output, 'wb')
+
+    convert_psf(option.filename, stream, option.version)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(run())

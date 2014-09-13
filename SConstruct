@@ -162,6 +162,11 @@ env.Append(
             suffix='.hex',
             src_suffix='.png',
         ),
+        'Font_hex2psf': Builder(
+            action='contrib/hex2psf -o font/$TARGET.file $SOURCE',
+            suffix='.psf',
+            src_suffix='.hex',
+        ),
     }
 )
 env.VariantDir('build', 'src')
@@ -222,17 +227,19 @@ elif not env.GetOption('help'):
 
     print 'Running with -j', GetOption('num_jobs')
 
-# Build .png from .b64
-# Build .hex from .png
+# Build .hex from .bin, .fnt and .png
 source_hex = [
-    Glob('build/piece/font/hex/*.hex'),
+    f for f in Glob('build/piece/font/hex/*.hex')
 ] + [
-    env.Font_png2hex(png)
-    for png in Glob('build/piece/font/png/*.png')
+    env.Font_bin2hex(f) for f in Glob('build/piece/font/bin/*.bin')
 ] + [
-    env.Font_bin2hex(env.Font_fnt2bin(fnt))
-    for fnt in Glob('build/piece/font/fnt/*.fnt')
+    env.Font_bin2hex(env.Font_fnt2bin(f)) for f in Glob('build/piece/font/fnt/*.fnt')
+] + [
+    env.Font_png2hex(f) for f in Glob('build/piece/font/png/*.png')
 ]
+
+# Build .psf from .hex
+source_psf = map(env.Font_hex2psf, source_hex)
 
 generated = []
 
@@ -352,6 +359,11 @@ piece_chrfont = env.Program(
     ['build/piece/main-chrfont.c', libpiece],
 )
 
+piece_disk = env.Program(
+    'bin/piece-disk',
+    Glob('build/disk/*.c'),
+)
+
 prefix = dict(
     all=GetOption('prefix'),
     bin=GetOption('bin_prefix').replace('$PREFIX', GetOption('prefix')),
@@ -373,6 +385,7 @@ if 'install' in COMMAND_LINE_TARGETS or 'uninstall' in COMMAND_LINE_TARGETS:
         ('include', Glob('include/piece/writer/*.h'), ['piece/writer']),
         ('include', ['include/sauce.h'], []),
         ('man', Glob('man/*.1'), ['man1']),
+        ('share', source_psf, ['piece'],)
     ]
     for typ, item, subs in targets:
         dirs = []

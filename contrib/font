@@ -1,0 +1,61 @@
+#!/usr/bin/env python2
+# Generates FONTS.md
+
+from collections import OrderedDict
+import markdown
+import yaml
+
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
+
+collection = ordered_load(open('font.yaml', 'r'))
+document = [
+    '# Fonts',
+    '',
+    'The following font collections are supported.',
+    '',
+]
+
+for section in collection:
+    document.append(' * [{}]({})'.format(
+        section,
+        '#' + section.lower().replace(' ', '-'),
+    ))
+
+document.append('')
+
+for section, fonts in collection.iteritems():
+    document.append('## ' + section)
+    document.append('')
+    names = fonts.keys()
+    links = ['<img src="font/{}.png">'.format(name) for name in names]
+    sizes = [
+        max(map(len, links)),
+        max(map(len, [font[0] for font in fonts.items()])),
+        max(map(len, [font[1] for font in fonts.items()])),
+    ]
+
+    document.append(' | '.join([
+        'Example'.ljust(sizes[0]),
+        'Name'.ljust(sizes[1]),
+        'Description'.ljust(sizes[2]),
+    ]))
+    document.append(' | '.join(['-' * i for i in sizes]))
+    for i, (name, description) in enumerate(fonts.items()):
+        link = links[i]
+        document.append(' | '.join([
+            link.ljust(sizes[0]),
+            name.ljust(sizes[1]),
+            description.encode('utf8').ljust(sizes[2]),
+        ]))
+    document.append('')
+
+print '\n'.join(document)

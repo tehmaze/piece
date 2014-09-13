@@ -1,0 +1,103 @@
+#!/usr/bin/env python2
+
+import os
+import sys
+import re
+from PIL import Image, ImageDraw, ImageFont
+
+
+RE_SIZE = re.compile(r'-(\d+)x(\d+)\.png$', re.I)
+
+CHARMAP = dict(
+    # Codepoint mappings for "Petme", see
+    # http://www.kreativekorp.com/software/fonts/c64.shtml
+    petscii=range(0xe020, 0xe040) + \
+            range(0xe000, 0xe020) + \
+            range(0xe040, 0xe060) + \
+            range(0xe060, 0xe080) + \
+            range(0xe020, 0xe040) + \
+            range(0xe300, 0xe320) + \
+            range(0xe340, 0xe360) + \
+            range(0xe360, 0xe380),
+)
+
+print CHARMAP
+
+def decode(c, encoding):
+    if encoding in CHARMAP:
+        return unichr(CHARMAP[encoding][ord(c)])
+
+    else:
+        return c.decode(encoding)
+
+
+def to_png(option):
+    size = (
+        option.char_width * option.glyphs,
+        option.char_height,
+    )
+    image = Image.new('1', size)
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype(option.filename, size=option.font_size)
+
+    for i in range(option.glyphs):
+        x = i * option.char_width
+        y = 0
+        if option.decode:
+            char = decode(chr(i), option.decode)
+        else:
+            char = unichr(i)
+        draw.text((x, y), char, fill=1, font=font)
+
+    image.save(option.output)
+
+
+def run():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-x', '--char-width', default=0, type=int,
+        help='Character pixel width (default: 8)',
+    )
+    parser.add_argument(
+        '-y', '--char-height', default=0, type=int,
+        help='Character pixel height (default: 16)',
+    )
+    parser.add_argument(
+        '-d', '--decode', default='',
+        help='Decode charset (default: use UTF-8)',
+    )
+    parser.add_argument(
+        '-g', '--glyphs', default=256, type=int,
+        help='Number of glyphs (default: 256)',
+    )
+    parser.add_argument(
+        '-s', '--font-size', default=0, type=int,
+        help='Font size in points (default: character width)',
+    )
+    parser.add_argument(
+        '-o', '--output', required=True,
+        help='Output file',
+    )
+    parser.add_argument('filename')
+    option = parser.parse_args()
+
+    if option.char_width == 0 or option.char_height == 0:
+        test = RE_SIZE.search(option.filename)
+        if test:
+            option.char_width = int(test.group(1))
+            option.char_height = int(test.group(2))
+        else:
+            option.char_width = 8
+            option.char_height = 16
+
+    if option.font_size == 0:
+        option.font_size = option.char_width
+
+    to_png(option)
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(run())
