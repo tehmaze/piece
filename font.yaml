@@ -79,7 +79,7 @@ IBM:
     ibm-cp1251-8x16:            "IBM PC Code Page 1251 (Slavic)"
     ibm-cp1251-8x8:             "IBM PC Code Page 1251 (Slavic)"
 
-Microsoft MSX:
+Microsoft:
     msx-brazilian-8x8:          "Microsoft MSX (Brazilian)"
     msx-cyrillic-8x8:           "Microsoft MSX (Cyrillic)"
 

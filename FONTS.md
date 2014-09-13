@@ -6,7 +6,7 @@ The following font collections are supported.
  * [Atari](#atari)
  * [Commodore](#commodore)
  * [IBM](#ibm)
- * [Microsoft MSX](#microsoft-msx)
+ * [Microsoft](#microsoft)
  * [Philips](#philips)
  * [Silicon Graphics](#silicon-graphics)
  * [Sinclair](#sinclair)
@@ -106,7 +106,7 @@ Example                                  | Name                | Description
 <img src="font/ibm-cp1251-8x16.png">     | ibm-cp1251-8x16     | IBM PC Code Page 1251 (Slavic)       
 <img src="font/ibm-cp1251-8x8.png">      | ibm-cp1251-8x8      | IBM PC Code Page 1251 (Slavic)       
 
-## Microsoft MSX
+## Microsoft
 
 Example                                | Name              | Description              
 -------------------------------------- | ----------------- | -------------------------
