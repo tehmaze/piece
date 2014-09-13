@@ -92,7 +92,9 @@ Silicon Graphics:
 
 Sinclair:
     sam-coupe-8x8:              "SAM Coupé (ZX Spectrum clone)"
+    zx-80-8x8:                  "Sinclair ZX80"
     zx-81-8x8:                  "Sinclair ZX81"
+    zx-aszmic-8x8:              "Sinclair ZX Aszmic"
     zx-evolution-8x8:           "Vitality ZX Evolution"
     zx-spectrum-8x8:            "Sinclair ZX Spectrum"
 
