@@ -79,10 +79,11 @@ static void image_save(gdImagePtr image, const char *filename)
     if (!strcmp(extension, "bmp")) {
         free(extension);
         fd = fopen(filename, "wb");
-        if (!ferror(fd)) {
-            gdImageBmp(image, fd, 0);
-            fclose(fd);
+        if (ferror(fd)) {
+            goto return_error;
         }
+        gdImageBmp(image, fd, 0);
+        goto return_done;
         return;
     }
 #endif
@@ -91,48 +92,73 @@ static void image_save(gdImagePtr image, const char *filename)
         !strcmp(extension, "jpeg")) {
         free(extension);
         fd = fopen(filename, "wb");
-        if (!ferror(fd)) {
-            gdImageJpeg(image, fd, 100);
-            fclose(fd);
+        if (ferror(fd)) {
+            goto return_error;
         }
+        gdImageJpeg(image, fd, 100);
+        goto return_done;
         return;
     }
 #endif
 #ifdef GD_GIF
     if (!strcmp(extension, "gif")) {
         free(extension);
-        fd = fopen(filename, "wb");
-        if (!ferror(fd)) {
+        if (piece_options->target->image->animate) {
+            fd = piece_options->target->fd;
+            gdImageGifAnimEnd(fd);
+        } else {
+            fd = fopen(filename, "wb");
+            if (ferror(fd)) {
+                goto return_error;
+            }
             gdImageGif(image, fd);
-            fclose(fd);
         }
+        goto return_done;
         return;
     }
 #endif
 #ifdef GD_PNG
     do {
+        if (strcmp(extension, "png")) {
+            fprintf(stderr, "warning: defaulting to PNG writer\n");
+        }
         free(extension);
         fd = fopen(filename, "wb");
-        if (!ferror(fd)) {
-            gdImagePng(image, fd);
-            fclose(fd);
+        if (ferror(fd)) {
+            goto return_error;
         }
-        return;
+        gdImagePng(image, fd);
+        goto return_done;
     } while(0);
 #endif
+
+return_error:
+    fprintf(stderr, "%s: error writing to file\n", filename);
+return_done:
+    fclose(fd);
 }
 
 gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
 {
     int32_t colors[256] __attribute__((unused));
     int32_t i, canvas_back;
-    uint16_t bits = sauce_flag_letter_spacing(display->record), s, t;
-    gdImagePtr result;
+    uint16_t bits = sauce_flag_letter_spacing(display->record), s, t, max_bg_colors;
+    uint8_t frames = 1;
+    gdImagePtr result, prev = NULL;
     piece_image_writer_buffers *image = piece_allocate(sizeof(piece_image_writer_buffers));
     piece_palette *palette = display->palette;
     piece_font *font = display->font;
     struct timeval start, now;
     gettimeofday(&start, NULL);
+
+    if (piece_options->target->image->ice_colors == 0) {
+        max_bg_colors = 8;
+        if (piece_options->target->image->animate) {
+            frames++;
+        }
+    } else {
+        max_bg_colors = 256;
+    }
 
     /* Command line specified palette takes presedence */
     if (piece_options->target->image->palette != NULL) {
@@ -183,6 +209,11 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
         exit(1);
     }
 
+    if (piece_options->target->image->animate &&
+        piece_options->target->fd != NULL) {
+        gdImageGifAnimBegin(image->ansi, piece_options->target->fd, 1, 0);
+    }
+
     // Colors for font (and back)
     dprintf("%s: setting up %d color palette %s\n", filename,
                                                     palette->colors,
@@ -209,7 +240,7 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
         255
     );
 
-    // Colors for underline
+    // Colors for foreground
     for (i = 0; i < palette->colors; ++i) {
         int32_t r = gdImageRed(image->back, i),
                 g = gdImageGreen(image->back, i),
@@ -246,86 +277,116 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
     i = 0;
     s = 0;
     t = 0;
-    for (i = 0; i < display->tiles; ++i) {
-        int32_t dst_x = (i % display->size.width) * bits,
-                dst_y = (i / display->size.width) * font->h;
+    for (uint8_t frame = 0; frame < frames; frame++) {
+        if (piece_options->target->image->animate) {
+            image->ansi = gdImageCreate(bits * display->size.width,
+                                       font->h * display->size.height);
+            canvas_back = gdImageColorAllocate(image->ansi, 0, 0, 0);
 
-        piece_screen_tile *current = &display->tile[i];
-
-        int16_t src_x = current->ch * bits,
-                src_y = current->fg * font->h;
-
-        if (current->bg != 0) {
-            gdImageCopy(
-                image->ansi,
-                image->back,
-                dst_x, dst_y,
-                current->bg * 9, 0,
-                bits, font->h
-            );
-        }
-
-        if (current->attrib & PIECE_ATTRIB_ITALICS) {
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x + 3, dst_y,
-                src_x, src_y,
-                bits, 2
-            );
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x + 2, dst_y + 2,
-                src_x, src_y + 2,
-                bits, 4
-            );
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x + 1, dst_y + 6,
-                src_x, src_y + 6,
-                bits, 4
-            );
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x, dst_y + 10,
-                src_x, src_y + 10,
-                bits, 4
-            );
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x - 1, dst_y + 14,
-                src_x, src_y + 14,
-                bits, 2
-            );
-
-        } else {
-            gdImageCopy(
-                image->ansi,
-                image->font,
-                dst_x, dst_y,
-                src_x, src_y,
-                bits, font->h
-            );
-        }
-
-        if (current->attrib & PIECE_ATTRIB_UNDERLINE) {
-            
-        }
-
-        if (piece_options->verbose && !(i % 80)) {
-            t = (int) (piece_seconds(now) * 4);
-            if (t > s) {
-                double perc = (i / (double) display->tiles) * 100.0;
-                printf("\r%s: .. still busy, at %.02f%% %s", filename,
-                                                             perc,
-                                                             spinner[t % spinners]);
-                fflush(stdout);
-                s = t;
+            // Colors for foreground
+            for (i = 0; i < palette->colors; ++i) {
+                int32_t r = gdImageRed(image->back, i),
+                        g = gdImageGreen(image->back, i),
+                        b = gdImageBlue(image->back, i);
+                colors[i] = gdImageColorAllocate(image->ansi, r, g, b);
             }
+        }
+
+        for (i = 0; i < display->tiles; ++i) {
+            int32_t dst_x = (i % display->size.width) * bits,
+                    dst_y = (i / display->size.width) * font->h;
+
+            piece_screen_tile *current = &display->tile[i];
+
+            int16_t src_x = current->ch * bits,
+                    src_y = current->fg * font->h;
+
+            uint8_t bg = current->bg;
+
+            if (bg != 0) {
+                gdImageCopy(
+                    image->ansi,
+                    image->back,
+                    dst_x, dst_y,
+                    (bg % max_bg_colors) * 9, 0,
+                    bits, font->h
+                );
+            }
+
+            // Only draw glyphs if we're either in the first frame, or the
+            // background color is within boundaries.
+            if (frame < 1 || bg < max_bg_colors) {
+                if (current->attrib & PIECE_ATTRIB_ITALICS) {
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x + 3, dst_y,
+                        src_x, src_y,
+                        bits, 2
+                    );
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x + 2, dst_y + 2,
+                        src_x, src_y + 2,
+                        bits, 4
+                    );
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x + 1, dst_y + 6,
+                        src_x, src_y + 6,
+                        bits, 4
+                    );
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x, dst_y + 10,
+                        src_x, src_y + 10,
+                        bits, 4
+                    );
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x - 1, dst_y + 14,
+                        src_x, src_y + 14,
+                        bits, 2
+                    );
+
+                } else {
+                    gdImageCopy(
+                        image->ansi,
+                        image->font,
+                        dst_x, dst_y,
+                        src_x, src_y,
+                        bits, font->h
+                    );
+                }
+
+                if (current->attrib & PIECE_ATTRIB_UNDERLINE) {
+                    
+                }
+            }
+
+            if (piece_options->verbose && !(i % 80)) {
+                t = (int) (piece_seconds(now) * 4);
+                if (t > s) {
+                    double perc = (i / (double) display->tiles * frames) * 100.0;
+                    printf("\r%s: .. still busy, at %.02f%% %s", filename,
+                                                                 perc,
+                                                                 spinner[t % spinners]);
+                    fflush(stdout);
+                    s = t;
+                }
+            }
+        }
+        
+        if (piece_options->target->image->animate) {
+            gdImageGifAnimAdd(image->ansi, piece_options->target->fd, 1, 0, 0, 25, 1, prev);
+            if (prev) {
+                gdImageDestroy(prev);
+            }
+            prev = image->ansi;
         }
     }
     if (t != 0) {
@@ -347,11 +408,36 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
 
 void image_writer_write(piece_screen *display, const char *filename)
 {
+    char *extension = piece_get_extension(filename);
+
+    for (int i = strlen(extension) - 1; i > -1; i--) {
+        extension[i] = tolower(extension[i]);
+    }
+
+    if (piece_options->target->image->animate && strcmp(extension, "gif")) {
+        piece_options->target->image->animate = false;
+        fprintf(stderr, "notice: animation not supported by output file type\n");
+        fprintf(stderr, "notice: animation disabled\n");
+    }
+
+    if (piece_options->target->image->animate && piece_options->target->image->ice_colors) {
+        piece_options->target->image->animate = false;
+        fprintf(stderr, "notice: animation disabled, iCE colors requested\n");
+    }
+
+    if (piece_options->target->image->animate) {
+        piece_options->target->fd = fopen(filename, "wb");
+        if (ferror(piece_options->target->fd)) {
+            fprintf(stderr, "%s: error opening for writing\n", filename);
+            return;
+        }
+    }
+
     gdImagePtr image = piece_image_writer_parse(display, filename);
     if (image != NULL) {
         image_save(image, filename);
+        gdImageDestroy(image);
     }
-    gdImageDestroy(image);
 }
 
 static piece_writer image_writer = {

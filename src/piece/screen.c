@@ -12,14 +12,14 @@ piece_screen *piece_screen_new(int32_t width, int32_t height, sauce *record)
     piece_screen *display;
 
     display = piece_allocate(sizeof(piece_screen));
-    if (record != NULL && (
+    if (record != NULL && ((
         record->data_type == SAUCE_DATA_TYPE_CHARACTER &&
         record->file_type == SAUCE_FILE_TYPE_RIPSCRIPT
         ) || (
         record->data_type == SAUCE_DATA_TYPE_BITMAP
         ) || (
         record->data_type == SAUCE_DATA_TYPE_VECTOR
-        )) {
+        ))) {
 
         /* We don't use tiles */
         display->tiles = 0;

@@ -36,7 +36,8 @@ static piece_font_alias piece_font_map[] = {
     {"atari",           "atascii_international_8x16", 8, true,  NULL},
     {"atascii",         "atascii_international_8x16", 8, true,  NULL},
 
-    {"c64",             "petscii",                    8, true,  NULL},
+    {"c64",             "petscii_8x8",                8, true,  NULL},
+    {"petscii",         "petscii_8x8",                8, true,  NULL},
 
     {NULL,              NULL,                         0, false, NULL}
 };

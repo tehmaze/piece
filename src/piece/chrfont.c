@@ -13,7 +13,7 @@ piece_chrfont_read(FILE *fd, const char *filename)
 {
     piece_chrfont *font = piece_allocate(sizeof(piece_chrfont));
     piece_chrfont_header *header;
-    char *description = NULL, *temp, ch;
+    char *description = NULL, ch;
 
     header = font->header = piece_allocate(sizeof(piece_chrfont_header));
     header->description = piece_allocate(sizeof(uint8_t) * 128);

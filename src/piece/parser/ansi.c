@@ -81,6 +81,9 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
             width = (unsigned int) record->tinfo[0];
             height = (unsigned int) record->tinfo[1];
         }
+        if (piece_options->target->image->ice_colors < 2) {
+            piece_options->target->image->ice_colors = record->flags.flag_b;
+        }
     } else {
         record = piece_allocate(sizeof(sauce));
     }

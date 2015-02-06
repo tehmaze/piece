@@ -118,6 +118,8 @@ void print_usage(FILE *stream, bool long_help)
         "  -p --palette <palette>   Output palette name, use \"list\" for a list\n"
         "  -o --output <filename>   Output file name\n"
         "  -w --writer <type>       Output writer, use \"list\" for a list\n"
+        "  -i --ice-colors          Output using iCE colors\n"
+        "  -a --animate             Output animation for blink\n"
     );
 
     if (long_help) {
@@ -138,20 +140,22 @@ int main(int argc, char *argv[])
     int next_option, status = 0;
     piece_source_option_flags *source;
     piece_target_option_flags *target;
-    const char* const short_options = "hHqvVt:f:o:p:w:";
+    const char* const short_options = "hHqvVt:f:o:p:w:ia";
     const struct option long_options[] = {
-        {"help",      no_argument,       NULL, 'h'},
-        {"long-help", no_argument,       NULL, 'H'},
-        {"quiet",     no_argument,       NULL, 'q'},
-        {"verbose",   no_argument,       NULL, 'v'},
-        {"version",   no_argument,       NULL, 'V'},
+        {"help",       no_argument,       NULL, 'h'},
+        {"long-help",  no_argument,       NULL, 'H'},
+        {"quiet",      no_argument,       NULL, 'q'},
+        {"verbose",    no_argument,       NULL, 'v'},
+        {"version",    no_argument,       NULL, 'V'},
         /* Input options */
-        {"type",      required_argument, NULL, 't'},
+        {"type",       required_argument, NULL, 't'},
         /* Output options */
-        {"font",      required_argument, NULL, 'f'},
-        {"output",    required_argument, NULL, 'o'},
-        {"palette",   required_argument, NULL, 'p'},
-        {"writer",    required_argument, NULL, 'w'},
+        {"font",       required_argument, NULL, 'f'},
+        {"output",     required_argument, NULL, 'o'},
+        {"palette",    required_argument, NULL, 'p'},
+        {"writer",     required_argument, NULL, 'w'},
+        {"ice-colors", no_argument,       NULL, 'i'},
+        {"animate",    no_argument,       NULL, 'a'},
         {0, 0, 0, 0} /* sentinel */
     };
 
@@ -159,12 +163,15 @@ int main(int argc, char *argv[])
     piece_options->source = source = piece_allocate(sizeof(piece_source_option_flags));
     piece_options->source->parsername = "auto";
     piece_options->target = target = piece_allocate(sizeof(piece_target_option_flags));
+    piece_options->target->fd = NULL;
     piece_options->target->filename = NULL;
     piece_options->target->font_name = NULL;         /* Let parser decide */
     piece_options->target->writer_name = "image";
     piece_options->target->image = piece_allocate(sizeof(piece_image_option_flags));
     piece_options->target->image->transparent = false;
     piece_options->target->image->palette = NULL;   /* Let parser decide */
+    piece_options->target->image->ice_colors = 0;   /* Let parser decide */
+    piece_options->target->image->animate = false;
     piece_options->verbose = 0;
 
     /* Initialize parsers */
@@ -252,6 +259,14 @@ int main(int argc, char *argv[])
                 print_writer_list();
                 goto exit_free;
             }
+            break;
+
+        case 'i':
+            target->image->ice_colors = 2;
+            break;
+
+        case 'a':
+            target->image->animate = true;
             break;
 
         case -1:

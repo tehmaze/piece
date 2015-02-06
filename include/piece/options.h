@@ -30,6 +30,8 @@ typedef struct piece_image_option_flags_s {
     bool                transparent;
     piece_palette       *palette;
     char                *palette_name;
+    unsigned char       ice_colors;
+    bool                animate;
 } piece_image_option_flags;
 
 typedef struct piece_target_option_flags_s {
@@ -39,6 +41,7 @@ typedef struct piece_target_option_flags_s {
     char                        *font_name;
     piece_writer                *writer;
     char                        *writer_name;
+    FILE                        *fd;
     piece_image_option_flags    *image;
 } piece_target_option_flags;
 
