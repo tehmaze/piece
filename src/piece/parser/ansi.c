@@ -15,7 +15,7 @@
 
 // Function prototype
 
-void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr);
+void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr, bool ice_colors);
 void piece_ansi_parser_parse_sgr256(piece_screen *display, uint32_t sgr, uint32_t c);
 
 static piece_ansi_sequence *sequence_new(void) {
@@ -64,12 +64,14 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
     int y_saved = 0;
     int i;
     char *feature;
+    bool ice_colors = false;
 
     char *extension = piece_get_extension(filename);
     if (!strcmp(extension, "diz") ||
         !strcmp(extension, "ion")) {
         width = 45;
     }
+    free(extension);
 
     record = sauce_read(fd);
     if (record != NULL) {
@@ -88,13 +90,26 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
         record = piece_allocate(sizeof(sauce));
     }
 
-    display = piece_screen_new(width, height, record);
-    display->palette_name = "vga";
+    display = piece_screen_new(width, height, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d piece_screen buffer\n",
                         filename, width, height);
         sauce_free(display->record);
         return NULL;
+    }
+    if (display->palette == NULL) {
+        if (piece_options->target->image->palette != NULL) {
+            display->palette = piece_options->target->image->palette;
+        } else if (piece_options->target->image->palette_name != NULL) {
+            display->palette = piece_palette_by_name(
+                piece_options->target->image->palette_name
+            );
+        } else {
+            display->palette = piece_palette_by_name("vga");
+        }
+    }
+    if (piece_options->verbose) {
+        printf("%s: using %s palette\n", filename, display->palette->name);
     }
 
     if (fseek(fd, 0, SEEK_END)) {
@@ -107,6 +122,7 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
     rewind(fd);
 
     sequences = piece_allocate(sizeof(piece_list));
+    ice_colors = (piece_options->target->image->ice_colors > 0);
     piece_list_new(sequences, sequence_free);
     while (state != ANSI_STATE_EXIT &&
            (ch = fgetc(fd)) != 0x00 &&
@@ -187,7 +203,7 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                                     while (node != NULL) {
                                         piece_ansi_sequence *curr = (piece_ansi_sequence *) node->data;
                                         uint32_t sgr = atoi((const char *) curr->sequence);
-                                        piece_ansi_parser_parse_sgr(display, sgr);
+                                        piece_ansi_parser_parse_sgr(display, sgr, ice_colors);
                                         node = node->next;
                                     }
                                 }
@@ -278,14 +294,16 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                                 case 0:     // From cursor to EOF
                                     for (i = (display->size.width * y) + x;
                                          i < display->tiles; ++i) {
-                                         piece_screen_tile_reset(&display->tile[i]);
+                                         piece_screen_tile_reset(display,
+                                                                 &display->tile[i]);
                                     }
                                     break;
 
                                 case 1:     // From cursor to start
                                     for (i = (display->size.width * y) + x;
                                          i >= 0; --i) {
-                                         piece_screen_tile_reset(&display->tile[i]);
+                                         piece_screen_tile_reset(display,
+                                                                 &display->tile[i]);
                                     }
                                     break;
 
@@ -328,7 +346,8 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                             }
 
                             for (i = start; i < end; ++i) {
-                                piece_screen_tile_reset(&display->tile[i]);
+                                piece_screen_tile_reset(display,
+                                                        &display->tile[i]);
                             }
 
                             break;
@@ -382,13 +401,42 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
                             x_saved = x;
                             break;
 
+                        case 't':   // "24 bit ANSI", custom hack by Curtis
+                                    // Wensley (eto):
+                                    // http://picoe.ca/2014/03/07/24-bit-ansi/
+                            if (piece_list_size(sequences) == 4) {
+                                uint8_t i = atoi(ANSI_SEQ_CC(sequences, 0)),
+                                        r = atoi(ANSI_SEQ_CC(sequences, 1)),
+                                        g = atoi(ANSI_SEQ_CC(sequences, 2)),
+                                        b = atoi(ANSI_SEQ_CC(sequences, 3));
+
+                                piece_rgba_color rgba = PIECE_RGB(r, g, b);
+                                int c = piece_palette_add_color(
+                                    display->palette,
+                                    &rgba
+                                );
+                                switch (i) {
+                                    case 0:
+                                        display->current->fg = c;
+                                        break;
+                                    case 1:
+                                        display->current->bg = c;
+                                        break;
+                                }
+                            } else {
+                                fprintf(stderr, "%s: invalid 24 bit color\n",
+                                                filename);
+                            }
+                            break;
+
                         case 'u':   // RCP (Restore Cursor Position)
                             y = y_saved;
                             x = x_saved;
                             break;
 
                         default:
-                            fprintf(stderr, "%s: invalid sequence ", filename);
+                            fprintf(stderr, "%s: invalid %d item sequence ",
+                                filename, piece_list_size(sequences));
                             fprintf(stderr, "<ESC>[");
                             if (sequences != NULL) {
                                 node = sequences->head;
@@ -434,16 +482,17 @@ piece_screen *piece_ansi_parser_read(FILE *fd, const char *filename)
     return display;
 }
 
-void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
+void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr, bool ice_colors) {
     switch (sgr) {
         case 0:
-            display->current->bg = PIECE_TILE_DEFAULT_BG;
-            display->current->fg = PIECE_TILE_DEFAULT_FG;
-            display->current->attrib = PIECE_ATTRIB_DEFAULT;
+            piece_screen_tile_reset(display, display->current);
             break;
 
         case 1:
             PIECE_ATTRIB_SET(display->current->attrib, PIECE_ATTRIB_BOLD);
+            if (display->current->fg < 8) {
+                display->current->fg += 8;
+            }
             break;
 
         case 3:
@@ -457,6 +506,9 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
         case 5:
         case 6:
             PIECE_ATTRIB_SET(display->current->attrib, PIECE_ATTRIB_BLINK);
+            if (display->current->bg < 8 && ice_colors) {
+                display->current->bg += 8;
+            }
             break;
 
         case 7:
@@ -472,11 +524,11 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
             break;
 
         case 21:
-            PIECE_ATTRIB_UNSET(display->current->attrib, PIECE_ATTRIB_BOLD);
-            break;
-
         case 22:
             PIECE_ATTRIB_UNSET(display->current->attrib, PIECE_ATTRIB_BOLD);
+            if (display->current->fg > 8 && display->current->fg < 16) {
+                display->current->fg -= 8;
+            }
             break;
 
         case 24:
@@ -485,6 +537,9 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
 
         case 25:
             PIECE_ATTRIB_UNSET(display->current->attrib, PIECE_ATTRIB_BLINK);
+            if (display->current->bg > 8 && display->current->bg < 16 && ice_colors) {
+                display->current->bg -= 8;
+            }
             break;
 
         case 27:
@@ -507,7 +562,11 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
         case 35:
         case 36:
         case 37:
-            display->current->fg = sgr - 30;
+            if (display->current->attrib & PIECE_ATTRIB_BOLD) {
+                display->current->fg = (sgr - 22);
+            } else {
+                display->current->fg = (sgr - 30);
+            }
             break;
 
         case 38:
@@ -515,7 +574,7 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
             break;
 
         case 39:
-            display->current->fg = PIECE_TILE_DEFAULT_FG;
+            display->current->bg = display->initial->bg;
             break;
 
         case 40:
@@ -526,7 +585,11 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
         case 45:
         case 46:
         case 47:
-            display->current->bg = sgr - 40;
+            if (ice_colors && display->current->attrib & PIECE_ATTRIB_BLINK) {
+                display->current->bg = (sgr - 32);
+            } else {
+                display->current->bg = (sgr - 40);
+            }
             break;
 
         case 48:
@@ -534,7 +597,7 @@ void piece_ansi_parser_parse_sgr(piece_screen *display, uint32_t sgr) {
             break;
 
         case 49:
-            display->current->bg = PIECE_TILE_DEFAULT_BG;
+            display->current->fg = display->initial->fg;
             break;
 
         default:
@@ -547,12 +610,10 @@ void piece_ansi_parser_parse_sgr256(piece_screen *display, uint32_t sgr, uint32_
 {
     switch (sgr) {
         case 38:
-            PIECE_ATTRIB_SET(display->current->attrib, PIECE_ATTRIB_FG_256);
-            display->current->fg = c;
+            display->current->fg = (c & 0xff);
             break;
         case 48:
-            PIECE_ATTRIB_SET(display->current->attrib, PIECE_ATTRIB_BG_256);
-            display->current->bg = c;
+            display->current->bg = (c & 0xff);
             break;
     }
 }

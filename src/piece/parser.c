@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "piece/list.h"
+#include "piece/options.h"
 #include "piece/parser.h"
 #include "piece/parser/ansi.h"
 #include "piece/parser/artworx.h"
@@ -95,6 +96,9 @@ piece_parser *piece_parser_for(FILE *fd, const char *filename)
             /* Iterate over all known piece_parsers and their extensions */
             for (node = piece_parsers->head; node != NULL; node = node->next) {
                 current = node->data;
+                if (current->extensions == NULL) {
+                    continue;
+                }
                 for (int i = 0; current->extensions[i] != NULL; ++i) {
                     if (!strcmp(current->extensions[i], extension)) {
                         found = current;
@@ -114,6 +118,8 @@ piece_parser *piece_parser_for(FILE *fd, const char *filename)
         fprintf(stderr, "%s: no suitable parser found, using ANSi parser\n",
                         filename);
         found = piece_parser_for_type("ansi");
+    } else if (piece_options->verbose) {
+        printf("%s: detected %s format\n", filename, found->name);
     }
 
     return found;

@@ -16,6 +16,15 @@
 #include "piece/palette.h"
 #include "piece/util.h"
 
+static void piece_screen_putchar_binary(piece_screen *display, unsigned char ch,
+                                        unsigned char attribute, int *x, int *y)
+{
+    display->current->attrib = 0;
+    display->current->bg = (attribute & 0xf0) >> 4;
+    display->current->fg = (attribute & 0x0f);
+    piece_screen_putchar(display, ch, x, y, true);
+}
+
 piece_screen *binary_parser_read(FILE *fd, const char *filename)
 {
     struct stat st;
@@ -30,13 +39,13 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
     fseek(fd, 0, SEEK_SET);
     if (fstat(fileno(fd), &st) < 0) {
         fprintf(stderr, "%s: stat() failed\n", filename);
-        goto binary_read_free;
+        goto return_bail;
     }
 
     p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fileno(fd), 0);
     if (p == MAP_FAILED) {
         fprintf(stderr, "%s: mmap() failed\n", filename);
-        goto binary_read_free;
+        goto return_bail;
     }
     s = p;
 
@@ -54,17 +63,20 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
     } else {
         record = piece_allocate(sizeof(sauce));
         record->flags.flag_ls = SAUCE_LS_8PIXEL;
+        width = 160;
+        height = st.st_size / (width * 2);
+        dprintf("%s: using size %dx%d\n", filename, width, height);
     }
 
     if (fsize == 0) {
         fsize = st.st_size;
     }
 
-    display = piece_screen_new(width, height, record);
+    display = piece_screen_new(width, height, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d screen buffer\n",
                         filename, width, height);
-        goto binary_read_free;
+        goto return_free;
     }
     display->palette = piece_palette_by_name("bin");
 
@@ -74,23 +86,16 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
     while (fsize >= 2) {
         ch = *p++;
         attribute = *p++;
-        display->current->bg = (attribute & 0xf0) >> 4;
-        display->current->fg = (attribute & 0x0f);
-        if (display->current->bg > 8 && !record->flags.flag_b) {
-            display->current->bg -= 8;
-        }
-        piece_screen_putchar(display, ch, &x, &y, true);
+        piece_screen_putchar_binary(display, ch, attribute, &x, &y);
         fsize -= 2;
     }
     dprintf(".. at %lu of %lu (after graphics)\n", p - s, st.st_size);
 
+
+return_free:
     munmap(p, st.st_size);
 
-binary_read_free:
-    if (display == NULL) {
-        free(record);
-        record = NULL;
-    }
+return_bail:
 
     return display;
 }

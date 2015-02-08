@@ -5,7 +5,6 @@
 
 typedef struct {
     gdImagePtr ansi;
-    gdImagePtr back;
     gdImagePtr font;
 } piece_image_writer_buffers;
 

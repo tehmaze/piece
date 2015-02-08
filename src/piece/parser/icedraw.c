@@ -68,7 +68,7 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
 
     fseek(fd, 8, SEEK_SET);
     width = (fgetc(fd) | (fgetc(fd) << 4)) + 1;
-    display = piece_screen_new(width, 1, record);
+    display = piece_screen_new(width, 1, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %d character buffer\n",
                         filename, width);
@@ -90,15 +90,16 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
     }
 
     display->palette = piece_palette_new("from file", 0);
-    piece_rgb_color rgb;
+    uint8_t r, g, b;
     for (uint8_t j = 0; j < 16; ++j) {
         ch = fgetc(fd);
-        rgb.r = (ch << 2) | (ch >> 4);
+        r = (ch << 2) | (ch >> 4);
         ch = fgetc(fd);
-        rgb.g = (ch << 2) | (ch >> 4);
+        g = (ch << 2) | (ch >> 4);
         ch = fgetc(fd);
-        rgb.b = (ch << 2) | (ch >> 4);
-        piece_palette_add_color(display->palette, &rgb);
+        b = (ch << 2) | (ch >> 4);
+        piece_rgba_color rgba = PIECE_RGB(r, g, b);
+        piece_palette_add_color(display->palette, &rgba);
     }
 
     fseek(fd, 12, SEEK_SET);
@@ -111,8 +112,8 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
             ch = fgetc(fd);
             attribute = fgetc(fd);
             while (repeat-- > 0) {
-                display->current->bg = (attribute & 0xf0) >> 4;
-                display->current->fg = (attribute & 0x0f);
+                display->current->bg = display->palette->color[(attribute & 0xf0) >> 4];
+                display->current->fg = display->palette->color[(attribute & 0x0f)];
                 piece_screen_putchar(display, ch, &x, &y, false);
                 if (++x == width) {
                     x = 0;
@@ -120,8 +121,8 @@ piece_screen *icedraw_parser_read(FILE *fd, const char *filename)
                 }
             }
         } else {
-            display->current->bg = (attribute & 0xf0) >> 4;
-            display->current->fg = (attribute & 0x0f);
+            display->current->bg = display->palette->color[(attribute & 0xf0) >> 4];
+            display->current->fg = display->palette->color[(attribute & 0x0f)];
             piece_screen_putchar(display, ch, &x, &y, false);
             if (++x == width) {
                 x = 0;

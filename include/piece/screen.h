@@ -31,15 +31,15 @@
 #define PIECE_ATTRIB_UNSET(x, attrib) do { x &= ~attrib; } while(0)
 
 typedef struct piece_screen_tile_s {
-    uint8_t         fg;       /* Foreground color palette index */
-    uint8_t         bg;       /* Background color palette index */
-    uint8_t         ch;
-    uint64_t        attrib;
+    int      fg;
+    int      bg;
+    uint8_t  ch;
+    uint64_t attrib;
 } piece_screen_tile;
 
 typedef struct piece_screen_size_s {
-    int32_t         width;
-    int32_t         height;
+    int32_t width;
+    int32_t height;
 } piece_screen_size;
 
 typedef struct piece_screen_s {
@@ -48,6 +48,7 @@ typedef struct piece_screen_s {
     uint8_t               *buffer;
     piece_screen_size     size;
     int64_t               cursor;
+    piece_screen_tile     *initial;
     piece_screen_tile     *current;
     sauce                 *record;
     piece_palette         *palette;
@@ -59,7 +60,8 @@ typedef struct piece_screen_s {
 
 // Function prototypes
 
-piece_screen        *piece_screen_new(int32_t width, int32_t height, sauce *);
+piece_screen        *piece_screen_new(int32_t, int32_t, sauce *,
+                                      piece_screen_tile *);
 void                piece_screen_free(piece_screen *);
 void                piece_screen_putchar(piece_screen *, uint8_t ch,
                                          int32_t *x, int32_t *y, bool);
@@ -68,7 +70,7 @@ bool                piece_screen_reduce(piece_screen *display,
                                         int32_t width, int32_t height);
 void                piece_screen_reset(piece_screen *display);
 
-bool                piece_screen_tile_reset(piece_screen_tile *);
+bool                piece_screen_tile_reset(piece_screen *, piece_screen_tile *);
 piece_screen_tile   *piece_screen_tile_append(piece_screen *display);
 bool                piece_screen_tile_append_many(piece_screen *, size_t);
 

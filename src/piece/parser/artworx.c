@@ -46,7 +46,7 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
     }
     fprintf(stderr, "%s: Artworx version %d\n", filename, version);
 
-    display = piece_screen_new(80, 1, record);
+    display = piece_screen_new(80, 1, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
@@ -56,15 +56,16 @@ piece_screen *artworx_parser_read(FILE *fd, const char *filename)
     // Artworx palettes are a bit perculiar, first we parse all 64 indexed RGB
     // colors, and then we make a sub selection of 16 particular colors (!?)
     artworx_palette = piece_palette_new("from file", 0);
-    piece_rgb_color rgb;
+    uint8_t r, g, b;
     for (uint8_t i = 0; i < ARTWORX_PALETTE_SRC_COLORS; ++i) {
         ch = fgetc(fd);
-        rgb.r = (ch << 2) | (ch >> 4);
+        r = (ch << 2) | (ch >> 4);
         ch = fgetc(fd);
-        rgb.g = (ch << 2) | (ch >> 4);
+        g = (ch << 2) | (ch >> 4);
         ch = fgetc(fd);
-        rgb.b = (ch << 2) | (ch >> 4);
-        piece_palette_add_color(artworx_palette, &rgb);
+        b = (ch << 2) | (ch >> 4);
+        piece_rgba_color rgba = PIECE_RGB(r, g, b);
+        piece_palette_add_color(artworx_palette, &rgba);
     }
 
     display->palette = piece_palette_new("from file", 0);

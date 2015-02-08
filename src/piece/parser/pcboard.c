@@ -52,7 +52,7 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
         rewind(fd);
     }
 
-    display = piece_screen_new(80, 25, record);
+    display = piece_screen_new(80, 25, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80x25 character buffer\n",
                         filename);
@@ -62,7 +62,7 @@ piece_screen *pcboard_parser_read(FILE *fd, const char *filename)
 
     /* Slurp */
     buffer = piece_allocate(sizeof(unsigned char) * fsize);
-    if (fread(buffer, fsize, 1, fd) != fsize) {
+    if (fread(buffer, fsize, 1, fd) == -1) {
         fprintf(stderr, "%s: error %d reading file\n", filename, ferror(fd));
         piece_screen_free(display);
         free(buffer);

@@ -5,6 +5,7 @@
 #include <getopt.h>
 
 #include "piece.h"
+#include "piece/banner.h"
 #include "piece/version.h"
 
 piece_option_flags *piece_options = NULL;
@@ -104,6 +105,7 @@ void print_type_list(void)
 
 void print_usage(FILE *stream, bool long_help)
 {
+    fprintf(stream, piece_banner);
     fprintf(stream, "%s [<options>] input\n", program_name);
     fprintf(
         stream,
@@ -300,7 +302,13 @@ int main(int argc, char *argv[])
     }
 
     dprintf("source: %s\n", source->filename);
-    dprintf("target: %s\n", source->filename);
+    dprintf("target: %s\n", target->filename);
+
+    if (!strcmp(source->filename, target->filename)) {
+        fprintf(stderr, "%s: would overwrite\n", source->filename);
+        status = 1;
+        goto exit_free;
+    }
 
     if ((fd = fopen(source->filename, "rb")) == NULL) {
         fprintf(stderr, "%s: error opening input file\n",

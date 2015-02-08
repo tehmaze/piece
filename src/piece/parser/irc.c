@@ -78,13 +78,13 @@ static piece_screen *irc_parser_read(FILE *fd, const char *filename)
     irc_parser_state state = IRC_PARSER_TEXT;
 
     record = sauce_read(fd);
-    display = piece_screen_new(80, 1, record);
+    display = piece_screen_new(80, 1, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
         goto return_free;
     }
-    display->palette_name = "ega";
+    display->palette = piece_palette_by_name("mirc");
 
     fseeko(fd, 0, SEEK_END);
     fsize = ftello(fd) - sauce_size(record);
@@ -111,8 +111,8 @@ reinterpret_char:
                 break;
 
             case PIECE_IRC_FIXED:
-                current->fg = PIECE_TILE_DEFAULT_FG;
-                current->bg = PIECE_TILE_DEFAULT_BG;
+                current->fg = display->palette->color[PIECE_TILE_DEFAULT_FG];
+                current->bg = display->palette->color[PIECE_TILE_DEFAULT_BG];
                 current->attrib = PIECE_TILE_DEFAULT_ATTRIB;
                 break;
 
@@ -159,8 +159,8 @@ reinterpret_char:
 
             } else if (color_ptr == 0) {
                 /* Empty ^C, reset colors */
-                current->fg = PIECE_TILE_DEFAULT_FG;
-                current->bg = PIECE_TILE_DEFAULT_BG;
+                current->fg = display->palette->color[PIECE_TILE_DEFAULT_FG];
+                current->bg = display->palette->color[PIECE_TILE_DEFAULT_BG];
 
             } else {
                 color[color_ptr] = 0x00;
@@ -182,10 +182,10 @@ reinterpret_char:
 
                 if (fg != -1) {
                     if (fg != 99) {
-                        current->fg = irc_color_map[fg % 16];
+                        current->fg = display->palette->color[irc_color_map[fg % 16]];
                     }
                     if (bg != -1 && bg != 99) {
-                        current->bg = irc_color_map[bg % 16];
+                        current->bg = display->palette->color[irc_color_map[bg % 16]];
                     }
                 }
 

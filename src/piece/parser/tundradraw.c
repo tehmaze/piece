@@ -4,21 +4,22 @@
 
 #include "piece/font.h"
 #include "piece/list.h"
+#include "piece/palette.h"
 #include "piece/parser.h"
 #include "piece/parser/tundradraw.h"
 #include "piece/screen.h"
 #include "piece/palette.h"
 #include "piece/util.h"
 
-static uint16_t fgetrgb(piece_palette *palette, FILE *fd)
+static piece_rgba_color fgetrgb(piece_palette *palette, FILE *fd)
 {
     int index = piece_fget32(fd);
-    piece_rgb_color rgb = {
+    piece_rgba_color rgba = PIECE_RGB(
         (index >> 16) & 0xff,
         (index >> 8) & 0xff,
         index & 0xff
-    };
-    return piece_palette_add_color(palette, &rgb);
+    );
+    return piece_palette_add_color(palette, &rgba);
 }
 
 bool tundradraw_parser_probe(FILE *fd, const char *UNUSED(filename))
@@ -43,6 +44,7 @@ return_probe_free:
 piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
 {
     piece_screen *display = NULL;
+    piece_screen_tile *initial = NULL;
     sauce *record = NULL;
     piece_tundradraw_header *header;
     int x = 0;
@@ -81,23 +83,17 @@ piece_screen *tundradraw_parser_read(FILE *fd, const char *filename)
         goto return_free;
     }
 
-    display = piece_screen_new(TUNDRADRAW_COLS, 1, record);
+    initial = piece_allocate(sizeof(piece_screen_tile));
+    initial->fg = 8;
+    initial->bg = 0;
+    display = piece_screen_new(TUNDRADRAW_COLS, 1, record, initial);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);
         free(record);
         goto return_free;
     }
-
-    display->font = NULL;
-    if (header->version == 24) {
-        display->palette = piece_palette_new("from file", 0);
-    } else {
-        display->palette = piece_palette_by_name("tnd");
-    }
-
-    piece_rgb_color rgb = {0, 0, 0};
-    piece_palette_add_color(display->palette, &rgb);
+    display->palette = piece_palette_by_name("tnd");
 
     while (!feof(fd) && ftell(fd) < fsize) {
         if (x == TUNDRADRAW_COLS) {

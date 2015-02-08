@@ -22,7 +22,7 @@ static piece_screen *ascii_parser_read(FILE *fd, const char *filename)
     off_t fsize;
 
     record = sauce_read(fd);
-    display = piece_screen_new(80, 1, record);
+    display = piece_screen_new(80, 1, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate 80 character buffer\n",
                         filename);

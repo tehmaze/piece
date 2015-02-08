@@ -66,12 +66,13 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
     piece_palette *xbin_palette = NULL;
     piece_font *xbin_font = NULL;
     int16_t xbin_font_chars = 256;
-    int64_t i, xbin_font_total, fsize, offset;
+    int64_t i, r, xbin_font_total, fsize;
     unsigned char ch, attribute;
     unsigned char *xbin_data = NULL, *tmp = NULL;
     int16_t repeat, method;
     int x = 0;
     int y = 0;
+    uint8_t rgb[16][3];
 
     fseek(fd, 0, SEEK_SET);
     if (fstat(fileno(fd), &st) < 0) {
@@ -110,15 +111,17 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
         xbin_palette = piece_allocate(sizeof(piece_palette));
         xbin_palette->name = "from file";
         xbin_palette->colors = 16;
-        i = sizeof(piece_rgb_color) * 16;
+        i = sizeof(piece_rgba_color) * 16;
         xbin_palette->color = piece_allocate(i);
-        memcpy(xbin_palette->color, p, i);
-        p += i;
+        memcpy(rgb, p, 48);
         for (i = 0; i < 16; ++i) {
-            xbin_palette->color[i].r <<= 4;
-            xbin_palette->color[i].g <<= 4;
-            xbin_palette->color[i].b <<= 4;
+            xbin_palette->color[i] = PIECE_RGB(
+                rgb[i][0] << 4,
+                rgb[i][1] << 4,
+                rgb[i][2] << 4
+            );
         }
+        p += 48;
     } else {
         dprintf("%s: using ega palette\n", filename);
     }
@@ -155,7 +158,7 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
     }
     record->flags.flag_b = header->flags.flag_non_blink;
 
-    display = piece_screen_new(header->width, header->height, record);
+    display = piece_screen_new(header->width, header->height, record, NULL);
     if (display == NULL) {
         fprintf(stderr, "%s: could not piece_allocate %dx%d screen buffer\n",
                         filename, header->width, header->height);
@@ -164,85 +167,52 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
     if (xbin_palette != NULL) {
         display->palette = xbin_palette;
     } else {
-        display->palette_name = "ega";
+        display->palette = piece_palette_by_name("ega");
     }
     if (xbin_font != NULL) {
         display->font = xbin_font;
     }
 
-    offset = (p - s);
     long gsize = header->width * header->height * 2;
     if (header->flags.flag_compress) {
         xbin_data = tmp = piece_allocate(gsize);
         dprintf("%s: parsing %lu bytes of compressed binary data\n", filename,
                                                                      fsize);
-        while (offset < fsize && (xbin_data - tmp) < gsize) {
+        while (i < gsize) {
             repeat = *p++;
             method = (repeat >> 6);
             repeat = (repeat & 0x3f) + 1;
 
             switch (method) {
                 case XBIN_COMP_NONE:
-#ifdef DEBUG
-                    assert((fsize) - offset >= (2 * repeat));
-#else
-                    if ((fsize) - offset < (2 * repeat)) {
-                        *p += ((fsize) - offset);
-                        break;
-                    }
-#endif
-                    for (i = 0; i < repeat; i++) {
-                        *xbin_data++ = *p++;
-                        *xbin_data++ = *p++;
+                    for (r = 0; r < repeat; r++) {
+                        xbin_data[i++] = *p++;
+                        xbin_data[i++] = *p++;
                     }
                     break;
 
                 case XBIN_COMP_CHAR:
-#ifdef DEBUG
-                    assert((fsize) - offset >= (repeat + 1));
-#else
-                    if ((fsize) - offset < (repeat + 1)) {
-                        *p += ((fsize) - offset);
-                        break;
-                    }
-#endif
                     ch = *p++;
-                    for (i = 0; i < repeat; i++) {
-                        *xbin_data++ = ch;
-                        *xbin_data++ = *p++;
+                    for (r = 0; r < repeat; r++) {
+                        xbin_data[i++] = ch;
+                        xbin_data[i++] = *p++;
                     }
                     break;
 
                 case XBIN_COMP_ATTR:
-#ifdef DEBUG
-                    assert((fsize) - offset >= (repeat + 1));
-#else
-                    if ((fsize) - offset < (repeat + 1)) {
-                        *p += ((fsize) - offset);
-                        break;
-                    }
-#endif
                     attribute = *p++;
-                    for (i = 0; i < repeat; ++i) {
-                        *xbin_data++ = *p++;
-                        *xbin_data++ = attribute;
+                    for (r = 0; r < repeat; r++) {
+                        xbin_data[i++] = *p++;
+                        xbin_data[i++] = attribute;
                     }
                     break;
 
                 case XBIN_COMP_BOTH:
-#ifdef DEBUG
-                    assert((fsize) - offset >= 2);
-#else
-                    if ((fsize) - offset < 2) {
-                        *p += ((fsize) - offset);
-                        break;
-                    }
-#endif
                     ch = *p++;
                     attribute = *p++;
-                    for (i = 0; i < repeat; ++i) {
-                        *xbin_data++ = ch;
-                        *xbin_data++ = attribute;
+                    for (r = 0; r < repeat; r++) {
+                        xbin_data[i++] = ch;
+                        xbin_data[i++] = attribute;
                     }
                     break;
 
@@ -252,8 +222,6 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
 #endif
                     break;
             }
-
-            offset = (p - s);
         }
         dprintf("%s: got %ld bytes in XBIN data buffer\n", filename,
                                                            (xbin_data - tmp));
