@@ -363,23 +363,6 @@ gdImagePtr piece_image_writer_parse(piece_screen *display, const char *filename)
         gdImageColorTransparent(image->ansi, canvas_back);
     }
 
-    if (0 && display->palette->colors <= 256) {
-        if (piece_options->verbose) {
-            printf("%s: converting true color to palette\n",
-                filename);
-        }
-        gdImageTrueColorToPaletteSetMethod(
-            image->ansi, 
-            GD_QUANT_LIQ,
-            0
-        );
-        gdImageTrueColorToPalette(
-            image->ansi,
-            0,
-            display->palette->colors
-        );
-    }
-
     gdImageDestroy(image->font);
     result = image->ansi;
     free(image);

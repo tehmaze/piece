@@ -105,7 +105,7 @@ void print_type_list(void)
 
 void print_usage(FILE *stream, bool long_help)
 {
-    fprintf(stream, piece_banner);
+    fputs(piece_banner, stream);
     fprintf(stream, "%s [<options>] input\n", program_name);
     fprintf(
         stream,

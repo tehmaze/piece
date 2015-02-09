@@ -36,6 +36,9 @@ vgcore.*
 # SConstruct
 .scon*
 
+# vim
+*.swp
+
 # Perl language specifics
 lang/perl/blib
 lang/perl/.build
