@@ -1,0 +1,10 @@
+#!/bin/bash
+PYTHON=($PYTHON python2.7 python2 python)
+export PYTHONPATH="$(pwd):$(dirname $0)/site_wright:$PYTHONPATH"
+for python in "${PYTHON[@]}"; do
+    if $python -V >/dev/null 2>&1; then
+        exec $python -m wright.main "$@"
+    fi
+done
+echo "No suitable Python executable found" >&2
+exit 1

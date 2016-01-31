@@ -4,3 +4,9 @@
 [submodule "lang/perl"]
 	path = lang/perl
 	url = https://github.com/bbsninja/piece-perl
+[submodule "site_wright"]
+	path = site_wright
+	url = https://github.com/tehmaze-labs/wright
+[submodule "font"]
+	path = font
+	url = https://github.com/tehmaze-labs/piece-font

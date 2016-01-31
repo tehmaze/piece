@@ -69,7 +69,7 @@ void piece_hexdump(FILE *stream, void *data, off_t offset, size_t size)
         }
 
         if (!skip_zeros && !(curr_zeros && !prev_zeros)) {
-            fprintf(stream, "0x%08jx", offset + i);
+            fprintf(stream, "0x%08llx", offset + i);
             for (j = 0; j < 16; j++) {
                 if (i + j > (off_t) size) break;
                 if (j % 8 == 0) {

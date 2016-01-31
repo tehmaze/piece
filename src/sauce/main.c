@@ -85,7 +85,7 @@ void sauce_show(const char *filename)
     printf("group....: %s\n", record->group);
     printf("date.....: %s\n", date);
     printf("file size: %d (in record)\n", record->file_size);
-    printf(".........: %lu (calculated)\n", st.st_size - sauce_size(record));
+    printf(".........: %llu (calculated)\n", st.st_size - sauce_size(record));
     printf("data type: %d (", record->data_type);
     if (record->data_type < 9) {
         printf("%s)\n", sauce_data_type[record->data_type]);

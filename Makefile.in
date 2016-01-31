@@ -1,0 +1,90 @@
+PREFIX = {{ PREFIX }}
+BINDIR = $(PREFIX)/bin
+LIBDIR = $(PREFIX)/lib
+
+.PHONY: all
+
+CFLAGS  = {{ CLAGS|join(" ") }}{% for path in INCLUDES %} -I{{ path }}{% endfor %}
+LDFLAGS = {{ LDFLAGS|join(" ") }}{% for path in LIBPATH %} -L{{ path }}{% endfor %}
+
+all: build
+
+build: build-piece build-sauce
+
+clean: clean-font clean-sauce clean-piece
+
+{#
+FONT_HEX      = $(wildcard src/piece/font/hex/*.hex)
+FONT_PNG      = $(wildcard src/piece/font/png/*.png)
+FONT_FNT      = $(wildcard src/piece/font/fnt/*.fnt)
+FONT_FNT2BIN  = $(patsubst %.fnt,%.bin,$(FONT_FNT))
+FONT_TARGETS  = $(FONT_HEX)
+FONT_TARGETS += $(patsubst %.png,%.hex,$(FONT_PNG))
+FONT_TARGETS += $(patsubst %.fnt,%.hex,$(FONT_FNT))
+
+src/piece/font/png/%.hex: src/piece/font/png/%.png
+	contrib/png2hex $< > $@
+
+src/piece/font/fnt/%.hex: src/piece/font/fnt/%.bin
+	contrib/bin2hex -o $@ $<
+
+src/piece/font/fnt/%.bin: src/piece/font/fnt/%.fnt
+	contrib/fnt2bin -o $@ $<
+
+src/piece/font.c: $(FONT_TARGETS)
+	contrib/hex2fontc -o $@ $^
+
+clean-font:
+	$(RM) $(FONT_TARGETS) $(FONT_FNT2BIN)
+
+#}
+
+FONT_SOURCES  = $(wildcard font/font/*/*/*.yml)
+FONT_OBJECTS  = $(patsubst %.yml,%.hex,$(FONT_SOURCES))
+
+font/font/%.hex: font/font/%.yml
+	font/bin/export-font -f hex -o $@ $<
+
+src/piece/font.c: $(FONT_OBJECTS)
+	contrib/hex2fontc -o $@ $^
+
+clean-font:
+	$(RM) $(FONT_OBJECTS)
+
+SAUCE_SOURCES = $(wildcard src/sauce/*.c)
+SAUCE_OBJECTS = $(patsubst %.c,%.o,$(SAUCE_SOURCES))
+SAUCE_DEPS    = $(patsubst %.c,%.d,$(SAUCE_SOURCES))
+SAUCE_TARGET  = sauce
+SAUCE_LIBS 	  =
+
+$(SAUCE_TARGET): $(SAUCE_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(SAUCE_LIBS) -o $@ $^
+
+build-sauce: $(SAUCE_TARGET)
+
+clean-sauce:
+	$(RM) $(SAUCE_OBJECTS) $(SAUCE_TARGET)
+
+PIECE_SOURCES = $(wildcard src/sauce/sauce.c src/piece/*.c src/piece/**/*.c src/piece-main/*.c) src/piece/font.c
+PIECE_OBJECTS = $(patsubst %.c,%.o,$(PIECE_SOURCES))
+PIECE_DEPS    = $(patsubst %.c,%.d,$(PIECE_SOURCES))
+PIECE_TARGET  = piece
+PIECE_LIBS 	  = {% for name in LIBS %}{{ lib(name) }} {% endfor %}
+
+$(PIECE_TARGET): $(PIECE_OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(PIECE_LIBS) -o $@ $^
+
+src/piece/%.o: src/piece/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+src/piece/%.d: src/piece/%.c
+	$(CC) -MM $(CFLAGS) -MT $(patsubst %.d,%.o,$@) -o $@ $<
+
+build-piece: $(PIECE_TARGET)
+
+clean-piece:
+	$(RM) $(PIECE_OBJECTS) $(PIECE_TARGET)
+
+ifneq ($(MAKECMDGOALS),clean)
+-include $(patsubst %.o,%.d,$(PIECE_OBJECTS))
+endif

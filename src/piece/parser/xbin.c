@@ -150,11 +150,11 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
         record = piece_allocate(sizeof(sauce));
         record->flags.flag_ls = SAUCE_LS_8PIXEL;
         fsize = st.st_size;
-        dprintf("fsize: %lu (based on file size)\n", fsize);
+        dprintf("fsize: %lld (based on file size)\n", fsize);
     } else {
         fseek(fd, 0, SEEK_END);
         fsize = st.st_size - sauce_size(record);
-        dprintf("fsize: %lu (based on SAUCE)\n", fsize);
+        dprintf("fsize: %lld (based on SAUCE)\n", fsize);
     }
     record->flags.flag_b = header->flags.flag_non_blink;
 
@@ -176,8 +176,8 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
     long gsize = header->width * header->height * 2;
     if (header->flags.flag_compress) {
         xbin_data = tmp = piece_allocate(gsize);
-        dprintf("%s: parsing %lu bytes of compressed binary data\n", filename,
-                                                                     fsize);
+        dprintf("%s: parsing %lld bytes of compressed binary data\n", filename,
+                                                                      fsize);
         while (i < gsize) {
             repeat = *p++;
             method = (repeat >> 6);
@@ -238,7 +238,7 @@ piece_screen *xbin_parser_read(FILE *fd, const char *filename)
         piece_screen_putchar_xbin(display, ch, attribute, &x, &y);
         fsize -= 2;
     }
-    dprintf(".. at %lu of %lu (after graphics)\n", p - s, st.st_size);
+    dprintf(".. at %lu of %lld (after graphics)\n", p - s, st.st_size);
 
 return_free:
     if (tmp != NULL) {

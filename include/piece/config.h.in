@@ -5,9 +5,13 @@
 #define INSTALL_BIN_PREFIX  "{bin_prefix}"
 #define INSTALL_LIB_PREFIX  "{lib_prefix}"
 
-#define WITH_PIECE_INCLUDES "{with_includes}"
-#define WITH_PIECE_LIBS     "{with_libs}"
-#define WITH_PIECE_LIBPIECE {with_libpiece}
-#define WITH_PIECE_LIBSAUCE {with_libsauce}
+{% for key, value in with()|sort %}{% if value -%}
+#define {{ key }} 1
+{% else -%}
+#define {{ key }} 0
+{% endif %}{% endfor %}
+
+#define WITH_PIECE_INCLUDES "{% for path in INCLUDES %}-I{{ path }} {% endfor %}"
+#define WITH_PIECE_LIBS     "{% for path in LIBPATH %}-L{{ path }} {% endfor %}{% for name in LIBS %}-l{{ libs }} {% endfor %}"
 
 #endif /* CONFIG_H */

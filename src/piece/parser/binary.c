@@ -89,7 +89,7 @@ piece_screen *binary_parser_read(FILE *fd, const char *filename)
         piece_screen_putchar_binary(display, ch, attribute, &x, &y);
         fsize -= 2;
     }
-    dprintf(".. at %lu of %lu (after graphics)\n", p - s, st.st_size);
+    dprintf(".. at %lu of %lld (after graphics)\n", p - s, st.st_size);
 
 
 return_free:

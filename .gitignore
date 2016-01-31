@@ -32,6 +32,8 @@ src/piece/font.c
 # Debug files
 core.*
 vgcore.*
+*.d
+*.dSYM
 
 # SConstruct
 .scon*
@@ -52,3 +54,8 @@ lang/perl/META.json
 lang/perl/MYMETA.*
 lang/perl/pm_to_blib
 *.bs
+
+# Generated files
+piece
+sauce
+Makefile
