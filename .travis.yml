@@ -1,18 +1,13 @@
 language: c
 
-sudo: false
+sudo: required
 
 compiler:
   - clang
   - gcc
 
-addons:
-  apt:
-    packages:
-      - python-imaging
-      - libgd-dev
-
 before_install:
+ - sudo apt-get install -y python-imaging python-jinja2 libgd-dev
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
 
