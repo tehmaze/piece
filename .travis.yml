@@ -1,5 +1,6 @@
 language: c
 
+dist: trusty
 sudo: required
 
 compiler:
@@ -7,7 +8,8 @@ compiler:
   - gcc
 
 before_install:
- - sudo apt-get install -y python-imaging python-jinja2 libgd-dev
+ - sudo apt-get update
+ - sudo apt-get install -y python-imaging python-jinja2 libgd-dev libgd2-xpm-dev
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
 
