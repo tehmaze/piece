@@ -1,11 +1,24 @@
 language: c
 
+sudo: false
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - python-imaging
+      - libgd-dev
+
 before_install:
- - sudo apt-get install libgd2-noxpm-dev python-imaging
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2006/sense25/m0-mario.ans
  - wget http://gfx.bbs.ninja/pack/lurk/to/pc/2014/blocktronics_wtf4/2m-sweetprince.xb
 
 script:
- - scons VERBOSE=1 || cat config.log
- - ./bin/piece -v -o m0-mario.png m0-mario.ans
- - ./bin/piece -v -o 2m-sweetprince.png 2m-sweetprince.xb
+ - ./configure || cat wright.log
+ - make piece sauce
+ - ./sauce m0-mario.ans
+ - ./piece -v -o m0-mario.png m0-mario.ans
+ - ./piece -v -o 2m-sweetprince.png 2m-sweetprince.xb
